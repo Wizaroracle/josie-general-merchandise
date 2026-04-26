@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { format } from "date-fns";
+import jsPDF from "jspdf";
+import { applyPlugin } from "jspdf-autotable";
 import {
   ChevronDown,
   ChevronUp,
@@ -7,7 +10,10 @@ import {
   Calendar,
   Package,
   ShoppingBag,
+  Download,
 } from "lucide-react";
+
+applyPlugin(jsPDF);
 
 interface SaleWithItems {
   id: string;
@@ -95,6 +101,108 @@ export default function Sales() {
 
   const todayTotal = sales.reduce((sum, s) => sum + s.total_amount, 0);
 
+  const downloadPDF = () => {
+    const doc = new jsPDF() as any;
+
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.text("Mom's Store — Daily Sales Report", 14, 22);
+
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100);
+    const displayDate = format(new Date(dateFilter + "T00:00:00"), "MMMM d, yyyy (EEEE)");
+    doc.text(`Date: ${displayDate}`, 14, 32);
+    doc.text(`Generated: ${format(new Date(), "MMMM d, yyyy h:mm a")}`, 14, 39);
+    doc.setTextColor(0);
+
+    // Summary
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Summary", 14, 51);
+
+    doc.autoTable({
+      startY: 55,
+      head: [["Metric", "Value"]],
+      body: [
+        ["Total Sales", `PHP ${todayTotal.toLocaleString("en-PH", { minimumFractionDigits: 2 })}`],
+        ["Total Transactions", sales.length.toString()],
+        [
+          "Total Items Sold",
+          sales.reduce((sum, s) => sum + s.items.reduce((a, i) => a + i.quantity, 0), 0).toString(),
+        ],
+        [
+          "Average per Transaction",
+          `PHP ${(sales.length > 0 ? todayTotal / sales.length : 0).toFixed(2)}`,
+        ],
+      ],
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+
+    // Sales Details
+    const y1 = doc.lastAutoTable.finalY + 12;
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Sales Transactions", 14, y1);
+
+    const transactionBodyData = sales.map((sale) => [
+      format(new Date(sale.created_at), "h:mm a"),
+      sale.items.map((i) => `${i.product_name} x${i.quantity}`).join(", "),
+      sale.payment_method,
+      sale.recorded_by_name,
+      `PHP ${sale.total_amount.toLocaleString("en-PH", { minimumFractionDigits: 2 })}`,
+    ]);
+
+    doc.autoTable({
+      startY: y1 + 4,
+      head: [["Time", "Items", "Payment", "Recorded By", "Amount"]],
+      body: transactionBodyData,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [59, 130, 246] },
+      foot: [
+        ["TOTAL", "", "", "", `PHP ${todayTotal.toLocaleString("en-PH", { minimumFractionDigits: 2 })}`],
+      ],
+      footStyles: {
+        fillColor: [239, 246, 255],
+        textColor: [30, 41, 59],
+        fontStyle: "bold",
+      },
+    });
+
+    // Payment Breakdown
+    const paymentMap: Record<string, { count: number; total: number }> = {};
+    sales.forEach((sale) => {
+      const method = sale.payment_method;
+      if (!paymentMap[method]) paymentMap[method] = { count: 0, total: 0 };
+      paymentMap[method].count++;
+      paymentMap[method].total += sale.total_amount;
+    });
+
+    if (Object.keys(paymentMap).length > 0) {
+      const y2 = doc.lastAutoTable.finalY + 12;
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Payment Methods", 14, y2);
+
+      const paymentBodyData = Object.entries(paymentMap).map(([method, data]) => [
+        method,
+        data.count.toString(),
+        `PHP ${data.total.toLocaleString("en-PH", { minimumFractionDigits: 2 })}`,
+      ]);
+
+      doc.autoTable({
+        startY: y2 + 4,
+        head: [["Method", "Count", "Total"]],
+        body: paymentBodyData,
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [59, 130, 246] },
+      });
+    }
+
+    doc.save(`sales-report-${dateFilter}.pdf`);
+  };
+
   const paymentColor: Record<string, string> = {
     Cash: "bg-green-100 text-green-700",
     GCash: "bg-blue-100 text-blue-700",
@@ -134,6 +242,13 @@ export default function Sales() {
             }`}
           >
             Today
+          </button>
+          <button
+            onClick={downloadPDF}
+            disabled={filtered.length === 0}
+            className="flex items-center gap-2 px-5 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white rounded-xl text-sm font-semibold transition-all"
+          >
+            <Download size={16} /> Download PDF
           </button>
         </div>
       </div>
