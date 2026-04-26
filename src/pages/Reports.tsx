@@ -1,11 +1,5 @@
-import React from 'react'
-
 const Reports = () => {
-  return (
-    <div>
-      
-    </div>
-  )
-}
+  return <div></div>;
+};
 
-export default Reports
+export default Reports;

@@ -10,7 +10,6 @@ import {
   Trash2,
   Package,
   CheckCircle,
-  X,
 } from "lucide-react";
 import type { CartItem, Product } from "../types";
 

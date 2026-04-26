@@ -199,10 +199,11 @@ export default function Dashboard() {
                   tickFormatter={(v) => `₱${v}`}
                 />
                 <Tooltip
-                  formatter={(value: number) => [
-                    `₱${value.toLocaleString()}`,
-                    "Sales",
-                  ]}
+                  formatter={(value) => {
+                    if (typeof value !== "number") return ["₱0", "Sales"];
+
+                    return [`₱${value.toLocaleString()}`, "Sales"];
+                  }}
                   contentStyle={{
                     borderRadius: "12px",
                     border: "none",
