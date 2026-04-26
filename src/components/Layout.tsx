@@ -40,7 +40,7 @@ export default function Layout() {
           </div>
           <div>
             <p className="text-white font-bold text-base leading-tight">
-              Mom's Store
+              Jonel General Merchandise
             </p>
             <p className="text-white/40 text-xs">Watch & Merchandise</p>
           </div>
