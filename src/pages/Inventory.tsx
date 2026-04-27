@@ -39,6 +39,7 @@ export default function Inventory() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [showImageOptions, setShowImageOptions] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -60,6 +61,7 @@ export default function Inventory() {
     const { data } = await supabase
       .from("products")
       .select("*")
+      .eq("is_deleted", false) // ← only show active products
       .order("created_at", { ascending: false });
     setProducts(data ?? []);
     setIsLoading(false);
@@ -156,16 +158,24 @@ export default function Inventory() {
   };
 
   const handleDelete = async (product: Product) => {
-    if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
+    if (
+      !confirm(
+        `Delete "${product.name}"? It will be hidden from inventory but kept in sales history.`,
+      )
+    )
+      return;
+
     const { error } = await supabase
       .from("products")
-      .delete()
+      .update({ is_deleted: true })
       .eq("id", product.id);
+
     if (error) {
       toast.error("Failed to delete product");
       return;
     }
-    toast.success("Product deleted");
+
+    toast.success("Product removed from inventory");
     fetchProducts();
   };
 
@@ -263,49 +273,62 @@ export default function Inventory() {
             <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
               {/* Image Upload */}
               <div className="flex flex-col items-center gap-3">
-                <div
-                  className="w-32 h-32 rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 cursor-pointer"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {imagePreview ? (
-                    <img
-                      src={imagePreview}
-                      alt="preview"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <Package size={40} className="text-gray-300" />
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <button
+                <div className="flex flex-col items-center gap-3">
+                  <div
+                    className="w-32 h-32 rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 cursor-pointer"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-medium transition-colors"
                   >
-                    <Package size={16} /> Upload Photo
-                  </button>
-                  <button
-                    onClick={() => cameraInputRef.current?.click()}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 rounded-xl text-sm font-medium text-blue-600 transition-colors"
-                  >
-                    <Camera size={16} /> Take Photo
-                  </button>
+                    {imagePreview ? (
+                      <img
+                        src={imagePreview}
+                        alt="preview"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2">
+                        <Package size={32} className="text-gray-300" />
+                        <span className="text-xs text-gray-400">
+                          Tap to add photo
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-medium transition-colors"
+                    >
+                      <Package size={16} /> Upload Photo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => cameraInputRef.current?.click()}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 rounded-xl text-sm font-medium text-blue-600 transition-colors"
+                    >
+                      <Camera size={16} /> Take Photo
+                    </button>
+                  </div>
+
+                  {/* File upload */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageSelect}
+                  />
+                  {/* Camera — works on tablet/mobile */}
+                  <input
+                    ref={cameraInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={handleImageSelect}
+                  />
                 </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageSelect}
-                />
-                <input
-                  ref={cameraInputRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  className="hidden"
-                  onChange={handleImageSelect}
-                />
               </div>
 
               {/* Product Name */}

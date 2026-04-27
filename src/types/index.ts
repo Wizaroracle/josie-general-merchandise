@@ -16,9 +16,9 @@ export interface Product {
   cost_price: number;
   stock_quantity: number;
   image_url: string | null;
+  is_deleted: boolean; 
   created_at: string;
 }
-
 export interface Sale {
   id: string;
   recorded_by: string;
