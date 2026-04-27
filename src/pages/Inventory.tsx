@@ -38,9 +38,10 @@ export default function Inventory() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
-  const [showImageOptions, setShowImageOptions] = useState(false);
-
+  const [showCameraModal, setShowCameraModal] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -55,6 +56,53 @@ export default function Inventory() {
       result = result.filter((p) => p.category === selectedCategory);
     setFiltered(result);
   }, [search, selectedCategory, products]);
+
+  const openCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+      });
+      streamRef.current = stream;
+      setShowCameraModal(true);
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+        }
+      }, 100);
+    } catch (err) {
+      toast.error("Camera not available. Please use Upload Photo instead.");
+    }
+  };
+  const closeCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    setShowCameraModal(false);
+  };
+
+  const capturePhoto = () => {
+    if (!videoRef.current || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d")?.drawImage(video, 0, 0);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        const file = new File([blob], `photo-${Date.now()}.jpg`, {
+          type: "image/jpeg",
+        });
+        setImageFile(file);
+        setImagePreview(URL.createObjectURL(blob));
+        closeCamera();
+      },
+      "image/jpeg",
+      0.9,
+    );
+  };
 
   const fetchProducts = async () => {
     setIsLoading(true);
@@ -304,14 +352,13 @@ export default function Inventory() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => cameraInputRef.current?.click()}
+                      onClick={openCamera}
                       className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 rounded-xl text-sm font-medium text-blue-600 transition-colors"
                     >
                       <Camera size={16} /> Take Photo
                     </button>
                   </div>
 
-                  {/* File upload */}
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -319,16 +366,51 @@ export default function Inventory() {
                     className="hidden"
                     onChange={handleImageSelect}
                   />
-                  {/* Camera — works on tablet/mobile */}
-                  <input
-                    ref={cameraInputRef}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    className="hidden"
-                    onChange={handleImageSelect}
-                  />
                 </div>
+
+                {/* Camera Modal */}
+                {showCameraModal && (
+                  <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60]">
+                    <div className="bg-white rounded-3xl overflow-hidden w-full max-w-lg mx-4">
+                      <div className="flex items-center justify-between p-4 border-b border-gray-100">
+                        <h3 className="font-bold text-[#0F172A]">Take Photo</h3>
+                        <button
+                          type="button"
+                          onClick={closeCamera}
+                          className="p-2 hover:bg-gray-100 rounded-xl"
+                        >
+                          <X size={20} />
+                        </button>
+                      </div>
+                      <div className="relative bg-black">
+                        <video
+                          ref={videoRef}
+                          autoPlay
+                          playsInline
+                          muted
+                          className="w-full max-h-80 object-cover"
+                        />
+                        <canvas ref={canvasRef} className="hidden" />
+                      </div>
+                      <div className="p-4 flex gap-3">
+                        <button
+                          type="button"
+                          onClick={closeCamera}
+                          className="flex-1 py-3 border-2 border-gray-200 rounded-xl font-medium text-[#64748B]"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={capturePhoto}
+                          className="flex-1 flex items-center justify-center gap-2 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl"
+                        >
+                          <Camera size={18} /> Capture
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Product Name */}
