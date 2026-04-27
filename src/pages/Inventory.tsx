@@ -25,6 +25,9 @@ export default function Inventory() {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [facingMode, setFacingMode] = useState<"environment" | "user">(
+    "environment",
+  );
 
   // Form state
   const [form, setForm] = useState({
@@ -57,12 +60,16 @@ export default function Inventory() {
     setFiltered(result);
   }, [search, selectedCategory, products]);
 
-  const openCamera = async () => {
+  const openCamera = async (facing: "environment" | "user" = "environment") => {
     try {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
+        video: { facingMode: facing },
       });
       streamRef.current = stream;
+      setFacingMode(facing);
       setShowCameraModal(true);
       setTimeout(() => {
         if (videoRef.current) {
@@ -74,6 +81,12 @@ export default function Inventory() {
       toast.error("Camera not available. Please use Upload Photo instead.");
     }
   };
+
+  const switchCamera = () => {
+    const newFacing = facingMode === "environment" ? "user" : "environment";
+    openCamera(newFacing);
+  };
+  
   const closeCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
@@ -352,7 +365,7 @@ export default function Inventory() {
                     </button>
                     <button
                       type="button"
-                      onClick={openCamera}
+                      onClick={() => openCamera("environment")}
                       className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 rounded-xl text-sm font-medium text-blue-600 transition-colors"
                     >
                       <Camera size={16} /> Take Photo
@@ -399,6 +412,13 @@ export default function Inventory() {
                           className="flex-1 py-3 border-2 border-gray-200 rounded-xl font-medium text-[#64748B]"
                         >
                           Cancel
+                        </button>{" "}
+                        <button
+                          type="button"
+                          onClick={switchCamera}
+                          className="py-3 px-4 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium text-[#64748B] flex items-center gap-2"
+                        >
+                          🔄 Switch
                         </button>
                         <button
                           type="button"
