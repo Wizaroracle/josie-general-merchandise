@@ -62,21 +62,39 @@ export default function Inventory() {
 
   const openCamera = async (facing: "environment" | "user" = "environment") => {
     try {
+      // Stop existing stream first
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
       }
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: facing },
-      });
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+
+      // Try exact first, fallback to ideal
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { exact: facing } },
+        });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: facing },
+        });
+      }
+
       streamRef.current = stream;
       setFacingMode(facing);
-      setShowCameraModal(true);
+
+      if (!showCameraModal) setShowCameraModal(true);
+
       setTimeout(() => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          videoRef.current.play();
+          videoRef.current.play().catch(() => {});
         }
-      }, 100);
+      }, 150);
     } catch (err) {
       toast.error("Camera not available. Please use Upload Photo instead.");
     }
@@ -86,13 +104,17 @@ export default function Inventory() {
     const newFacing = facingMode === "environment" ? "user" : "environment";
     openCamera(newFacing);
   };
-  
+
   const closeCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
     setShowCameraModal(false);
+    setFacingMode("environment");
   };
 
   const capturePhoto = () => {
