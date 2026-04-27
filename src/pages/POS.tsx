@@ -48,7 +48,11 @@ export default function POS() {
 
   const fetchProducts = async () => {
     setIsLoading(true);
-    const { data } = await supabase.from("products").select("*").order("name");
+    const { data } = await supabase
+      .from("products")
+      .select("*")
+      .or("is_deleted.eq.false,is_deleted.is.null")
+      .order("name");
     setProducts(data ?? []);
     setIsLoading(false);
   };

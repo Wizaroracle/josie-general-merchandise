@@ -109,7 +109,7 @@ export default function Inventory() {
     const { data } = await supabase
       .from("products")
       .select("*")
-      .eq("is_deleted", false) // ← only show active products
+      .or("is_deleted.eq.false,is_deleted.is.null") // ← handles both false AND null
       .order("created_at", { ascending: false });
     setProducts(data ?? []);
     setIsLoading(false);
