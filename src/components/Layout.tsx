@@ -53,10 +53,13 @@ export default function Layout() {
     navigate("/login");
   };
 
-  const userInitial = profile?.full_name?.charAt(0).toUpperCase() ?? "U";
+  const userInitial =
+    profile?.full_name?.charAt(0).toUpperCase() ??
+    profile?.email?.charAt(0).toUpperCase() ??
+    "U";
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F6F0EA] text-[#1F1712]">
+    <div className="flex h-dvh overflow-hidden bg-[#F6F0EA] text-[#1F1712]">
       {/* Mobile / Small Tablet Top Bar */}
       <header className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-[#E6D2BD] bg-[#FFF8F1] px-4 shadow-sm md:hidden">
         <button
@@ -102,7 +105,7 @@ export default function Layout() {
       >
         {/* Logo / Header */}
         <div
-          className={`flex min-h-[112px] items-center border-b border-white/10 px-4 ${
+          className={`flex min-h-[104px] items-center border-b border-white/10 px-4 ${
             sidebarCollapsed ? "justify-center" : "justify-between gap-3"
           }`}
         >
@@ -144,7 +147,7 @@ export default function Layout() {
 
         {/* Collapse Button for Icon Mode */}
         {sidebarCollapsed && (
-          <div className="border-b border-white/10 px-4 py-3">
+          <div className="border-b border-white/10 px-3 py-3">
             <button
               type="button"
               onClick={toggleSidebarCollapse}
@@ -158,7 +161,7 @@ export default function Layout() {
 
         {/* Navigation */}
         <nav
-          className={`flex flex-1 flex-col gap-2 overflow-y-auto py-5 ${
+          className={`flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto py-5 ${
             sidebarCollapsed ? "px-3" : "px-4"
           }`}
         >
@@ -181,24 +184,18 @@ export default function Layout() {
               <Icon size={23} className="shrink-0" />
 
               {!sidebarCollapsed && <span>{label}</span>}
-
-              {sidebarCollapsed && (
-                <span className="pointer-events-none absolute left-[72px] z-50 hidden whitespace-nowrap rounded-xl bg-[#1F1712] px-3 py-2 text-sm font-bold text-white shadow-lg group-hover:block">
-                  {label}
-                </span>
-              )}
             </NavLink>
           ))}
         </nav>
 
         {/* User + Sign Out */}
         <div
-          className={`border-t border-white/10 py-5 ${
+          className={`shrink-0 border-t border-white/10 py-4 ${
             sidebarCollapsed ? "px-3" : "px-4"
           }`}
         >
           <div
-            className={`mb-3 flex items-center rounded-2xl ${
+            className={`mb-2 flex items-center rounded-2xl ${
               sidebarCollapsed ? "justify-center px-0 py-2" : "gap-3 px-3 py-3"
             }`}
           >
@@ -224,19 +221,13 @@ export default function Layout() {
             type="button"
             onClick={handleSignOut}
             title={sidebarCollapsed ? "Sign Out" : undefined}
-            className={`group relative flex min-h-[52px] w-full items-center rounded-2xl text-base font-extrabold text-white/55 transition-all hover:bg-red-500/10 hover:text-red-400 focus:outline-none focus:ring-4 focus:ring-red-500/20 ${
+            className={`flex min-h-[52px] w-full items-center rounded-2xl text-base font-extrabold text-white/55 transition-all hover:bg-red-500/10 hover:text-red-400 focus:outline-none focus:ring-4 focus:ring-red-500/20 ${
               sidebarCollapsed ? "justify-center px-0" : "gap-3 px-4 py-3"
             }`}
           >
             <LogOut size={21} className="shrink-0" />
 
             {!sidebarCollapsed && <span>Sign Out</span>}
-
-            {sidebarCollapsed && (
-              <span className="pointer-events-none absolute left-[72px] z-50 hidden whitespace-nowrap rounded-xl bg-[#1F1712] px-3 py-2 text-sm font-bold text-white shadow-lg group-hover:block">
-                Sign Out
-              </span>
-            )}
           </button>
         </div>
       </aside>
@@ -278,7 +269,7 @@ export default function Layout() {
         </div>
 
         {/* Mobile Navigation */}
-        <nav className="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-5">
+        <nav className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 py-5">
           {navItems.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
@@ -300,7 +291,7 @@ export default function Layout() {
         </nav>
 
         {/* Mobile User + Sign Out */}
-        <div className="border-t border-white/10 px-4 py-5">
+        <div className="shrink-0 border-t border-white/10 px-4 py-5">
           <div className="mb-3 flex items-center gap-3 rounded-2xl px-3 py-3">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#8B572A]">
               <span className="text-lg font-extrabold text-[#FF8A2A]">
@@ -329,9 +320,11 @@ export default function Layout() {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="min-w-0 flex-1 overflow-y-auto bg-[#F6F0EA] pt-16 md:pt-0">
-        <Outlet />
+      {/* Main Content - NO PAGE SCROLL */}
+      <main className="min-w-0 flex-1 overflow-hidden bg-[#F6F0EA] pt-16 md:pt-0">
+        <div className="h-full min-h-0 overflow-hidden">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

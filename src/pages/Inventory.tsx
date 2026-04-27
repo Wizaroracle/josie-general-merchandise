@@ -4,6 +4,7 @@ import {
   useRef,
   useState,
   type ChangeEvent,
+  type ReactNode,
 } from "react";
 import { supabase } from "../lib/supabase";
 import { toast } from "sonner";
@@ -37,7 +38,7 @@ export default function Inventory() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [facingMode, setFacingMode] = useState<"environment" | "user">(
-    "environment"
+    "environment",
   );
 
   const [form, setForm] = useState({
@@ -59,11 +60,11 @@ export default function Inventory() {
   const streamRef = useRef<MediaStream | null>(null);
 
   const totalLowStock = products.filter(
-    (product) => product.stock_quantity < LOW_STOCK_THRESHOLD
+    (product) => product.stock_quantity < LOW_STOCK_THRESHOLD,
   ).length;
 
   const totalOutOfStock = products.filter(
-    (product) => product.stock_quantity === 0
+    (product) => product.stock_quantity === 0,
   ).length;
 
   const formatPeso = (value: number) => {
@@ -94,7 +95,7 @@ export default function Inventory() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      toast.error("Failed to load inventory");
+      toast.error("Failed to load inventory.");
       setIsLoading(false);
       return;
     }
@@ -114,13 +115,13 @@ export default function Inventory() {
       const keyword = search.toLowerCase().trim();
 
       result = result.filter((product) =>
-        product.name.toLowerCase().includes(keyword)
+        product.name.toLowerCase().includes(keyword),
       );
     }
 
     if (selectedCategory !== "All") {
       result = result.filter(
-        (product) => product.category === selectedCategory
+        (product) => product.category === selectedCategory,
       );
     }
 
@@ -204,7 +205,7 @@ export default function Inventory() {
         closeCamera();
       },
       "image/jpeg",
-      0.9
+      0.9,
     );
   };
 
@@ -374,7 +375,7 @@ export default function Inventory() {
 
   const handleDelete = async (product: Product) => {
     const confirmed = confirm(
-      `Delete "${product.name}"?\n\nIt will be hidden from inventory but kept in sales history.`
+      `Delete "${product.name}"?\n\nIt will be hidden from inventory but kept in sales history.`,
     );
 
     if (!confirmed) return;
@@ -394,17 +395,17 @@ export default function Inventory() {
   };
 
   return (
-    <main className="min-h-full bg-[#F6F0EA] p-4 text-[#1F1712] sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <main className="h-full overflow-hidden bg-[#F6F0EA] p-3 text-[#1F1712] sm:p-4 lg:p-5">
+      <div className="mx-auto grid h-full max-w-[1600px] grid-rows-[auto_auto_auto_minmax(0,1fr)] gap-4">
         {/* Header */}
-        <section className="rounded-[24px] border border-[#E6D2BD] bg-[#F8F2EC] p-5 shadow-sm sm:p-6 lg:p-7">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <section className="rounded-[22px] border border-[#E6D2BD] bg-[#F8F2EC] p-4 shadow-sm sm:p-5">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-3xl font-extrabold tracking-tight text-[#1F1712] sm:text-4xl">
+              <h1 className="text-2xl font-extrabold tracking-tight text-[#1F1712] sm:text-3xl">
                 Inventory
               </h1>
 
-              <p className="mt-1 text-base font-semibold text-[#6F625A] sm:text-lg">
+              <p className="mt-1 text-sm font-semibold text-[#6F625A] sm:text-base">
                 Manage products, prices, photos, and stock levels.
               </p>
             </div>
@@ -412,43 +413,43 @@ export default function Inventory() {
             <button
               type="button"
               onClick={openAdd}
-              className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#FF6B0A] px-6 py-3.5 text-base font-extrabold text-white shadow-lg shadow-[#FF6B0A]/20 transition-all hover:bg-[#E85F08] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/25 sm:w-auto"
+              className="inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-2xl bg-[#FF6B0A] px-5 py-3 text-base font-extrabold text-white shadow-lg shadow-[#FF6B0A]/20 transition-all hover:bg-[#E85F08] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/25 sm:w-auto"
             >
-              <Plus size={22} />
+              <Plus size={21} />
               Add Product
             </button>
           </div>
         </section>
 
         {/* Summary Cards */}
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <section className="grid grid-cols-3 gap-3">
           <InventorySummaryCard
-            label="Total Products"
+            label="Products"
             value={products.length.toString()}
-            icon={<Package size={24} />}
+            icon={<Package size={21} />}
           />
 
           <InventorySummaryCard
             label="Low Stock"
             value={totalLowStock.toString()}
-            icon={<AlertTriangle size={24} />}
+            icon={<AlertTriangle size={21} />}
             warning={totalLowStock > 0}
           />
 
           <InventorySummaryCard
-            label="Out of Stock"
+            label="Out"
             value={totalOutOfStock.toString()}
-            icon={<AlertTriangle size={24} />}
+            icon={<AlertTriangle size={21} />}
             danger={totalOutOfStock > 0}
           />
         </section>
 
         {/* Search + Filter */}
-        <section className="rounded-[24px] border border-[#E6D2BD] bg-[#FFF8F1] p-4 shadow-sm sm:p-5">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
+        <section className="rounded-[22px] border border-[#E6D2BD] bg-[#FFF8F1] p-3 shadow-sm sm:p-4">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
             <div className="relative flex-1">
               <Search
-                size={22}
+                size={20}
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7C6D64]"
               />
 
@@ -457,7 +458,7 @@ export default function Inventory() {
                 placeholder="Search products..."
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                className="min-h-14 w-full rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] py-3.5 pl-12 pr-12 text-base font-semibold text-[#1F1712] outline-none transition focus:border-[#FF6B0A] focus:ring-4 focus:ring-[#FF6B0A]/15"
+                className="min-h-[50px] w-full rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] py-3 pl-11 pr-12 text-base font-semibold text-[#1F1712] outline-none transition focus:border-[#FF6B0A] focus:ring-4 focus:ring-[#FF6B0A]/15"
               />
 
               {search && (
@@ -478,7 +479,7 @@ export default function Inventory() {
                   key={category}
                   type="button"
                   onClick={() => setSelectedCategory(category)}
-                  className={`min-h-12 shrink-0 rounded-2xl px-5 py-3 text-base font-extrabold transition-all focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20 ${
+                  className={`min-h-[46px] shrink-0 rounded-2xl px-4 py-2.5 text-sm font-extrabold transition-all focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20 ${
                     selectedCategory === category
                       ? "bg-[#FF6B0A] text-white shadow-lg shadow-[#FF6B0A]/20"
                       : "border border-[#E6D2BD] bg-[#FFFDF9] text-[#6F625A] hover:border-[#FF6B0A] hover:text-[#FF6B0A]"
@@ -491,56 +492,71 @@ export default function Inventory() {
           </div>
         </section>
 
-        {/* Product Grid */}
-        {isLoading ? (
-          <div className="flex min-h-[360px] items-center justify-center rounded-[24px] border border-[#E6D2BD] bg-[#FFF8F1]">
-            <div className="flex flex-col items-center gap-4">
-              <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#FF6B0A] border-t-transparent" />
-              <p className="text-lg font-bold text-[#3B312A]">
-                Loading inventory...
-              </p>
+        {/* Product Grid - only this area scrolls */}
+        <section className="min-h-0 overflow-y-auto pr-1">
+          {isLoading ? (
+            <div className="flex min-h-[280px] items-center justify-center rounded-[22px] border border-[#E6D2BD] bg-[#FFF8F1]">
+              <div className="relative flex w-full max-w-xs flex-col items-center overflow-hidden rounded-[24px] border border-[#E6D2BD] bg-[#FFF8F1] px-7 py-7 text-center shadow-sm">
+                <div className="absolute inset-x-0 top-0 h-1.5 bg-[#FF6B0A]" />
+
+                <div className="relative mb-2 flex h-16 w-16 items-center justify-center">
+                  <div className="absolute h-16 w-16 animate-spin rounded-full border-4 border-[#FFE3C8] border-t-[#FF6B0A]" />
+
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FFF0DE]">
+                    <Package size={25} className="text-[#FF6B0A]" />
+                  </div>
+                </div>
+
+                <p className="text-lg font-extrabold text-[#1F1712]">
+                  Loading inventory
+                </p>
+
+                <p className="mt-1 text-sm font-semibold text-[#7C6D64]">
+                  Please wait...
+                </p>
+              </div>
             </div>
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="flex min-h-[360px] flex-col items-center justify-center rounded-[24px] border border-dashed border-[#E6D2BD] bg-[#FFF8F1] px-5 text-center">
-            <Package size={60} className="mb-4 text-[#FF6B0A]/35" />
+          ) : filtered.length === 0 ? (
+            <div className="flex min-h-[280px] flex-col items-center justify-center rounded-[22px] border border-dashed border-[#E6D2BD] bg-[#FFF8F1] px-5 text-center">
+              <Package size={54} className="mb-4 text-[#FF6B0A]/35" />
 
-            <p className="text-2xl font-extrabold text-[#1F1712]">
-              No products found
-            </p>
+              <p className="text-2xl font-extrabold text-[#1F1712]">
+                No products found
+              </p>
 
-            <p className="mt-2 max-w-md text-base font-medium text-[#6F625A]">
-              Try changing your search or category filter. You can also add a
-              new product to your inventory.
-            </p>
+              <p className="mt-2 max-w-md text-base font-medium text-[#6F625A]">
+                Try changing your search or category filter. You can also add a
+                new product to your inventory.
+              </p>
 
-            <button
-              type="button"
-              onClick={openAdd}
-              className="mt-6 inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-[#FF6B0A] px-6 py-3 text-base font-extrabold text-white transition hover:bg-[#E85F08]"
-            >
-              <Plus size={20} />
-              Add Product
-            </button>
-          </div>
-        ) : (
-          <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {filtered.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                formatPeso={formatPeso}
-                onEdit={() => openEdit(product)}
-                onDelete={() => handleDelete(product)}
-              />
-            ))}
-          </section>
-        )}
+              <button
+                type="button"
+                onClick={openAdd}
+                className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-[#FF6B0A] px-6 py-3 text-base font-extrabold text-white transition hover:bg-[#E85F08]"
+              >
+                <Plus size={20} />
+                Add Product
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 pb-2 sm:grid-cols-3 lg:grid-cols-5">
+              {filtered.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  formatPeso={formatPeso}
+                  onEdit={() => openEdit(product)}
+                  onDelete={() => handleDelete(product)}
+                />
+              ))}
+            </div>
+          )}
+        </section>
 
         {/* Add/Edit Modal */}
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1F1712]/60 p-3 backdrop-blur-sm sm:p-4">
-            <div className="flex max-h-[94vh] w-full max-w-2xl flex-col overflow-hidden rounded-[28px] border border-[#E6D2BD] bg-[#FFF8F1] shadow-2xl">
+            <div className="flex max-h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-[28px] border border-[#E6D2BD] bg-[#FFF8F1] shadow-2xl">
               {/* Modal Header */}
               <div className="flex items-center justify-between border-b border-[#E6D2BD] px-5 py-4 sm:px-6">
                 <div>
@@ -667,9 +683,7 @@ export default function Inventory() {
                       <button
                         key={category}
                         type="button"
-                        onClick={() =>
-                          setForm({ ...form, category: category })
-                        }
+                        onClick={() => setForm({ ...form, category: category })}
                         className={`min-h-11 rounded-2xl px-4 py-2.5 text-base font-extrabold transition-all focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20 ${
                           form.category === category
                             ? "bg-[#FF6B0A] text-white shadow-md shadow-[#FF6B0A]/20"
@@ -749,7 +763,7 @@ export default function Inventory() {
                 <button
                   type="button"
                   onClick={closeProductModal}
-                  className="min-h-13 rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] px-5 py-3.5 text-base font-extrabold text-[#6F625A] transition hover:border-[#FF6B0A] hover:text-[#FF6B0A] focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20"
+                  className="min-h-[52px] rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] px-5 py-3.5 text-base font-extrabold text-[#6F625A] transition hover:border-[#FF6B0A] hover:text-[#FF6B0A] focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20"
                 >
                   Cancel
                 </button>
@@ -758,7 +772,7 @@ export default function Inventory() {
                   type="button"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
-                  className="inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-[#FF6B0A] px-5 py-3.5 text-base font-extrabold text-white transition hover:bg-[#E85F08] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/25"
+                  className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-[#FF6B0A] px-5 py-3.5 text-base font-extrabold text-white transition hover:bg-[#E85F08] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/25"
                 >
                   {isSubmitting ? (
                     <>
@@ -808,7 +822,7 @@ export default function Inventory() {
                   autoPlay
                   playsInline
                   muted
-                  className="max-h-[65vh] w-full object-contain"
+                  className="max-h-[65dvh] w-full object-contain"
                 />
 
                 <canvas ref={canvasRef} className="hidden" />
@@ -818,7 +832,7 @@ export default function Inventory() {
                 <button
                   type="button"
                   onClick={closeCamera}
-                  className="min-h-13 rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] px-4 py-3 text-base font-extrabold text-[#6F625A] transition hover:border-[#FF6B0A] hover:text-[#FF6B0A]"
+                  className="min-h-[52px] rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] px-4 py-3 text-base font-extrabold text-[#6F625A] transition hover:border-[#FF6B0A] hover:text-[#FF6B0A]"
                 >
                   Cancel
                 </button>
@@ -826,7 +840,7 @@ export default function Inventory() {
                 <button
                   type="button"
                   onClick={switchCamera}
-                  className="inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-[#FFF0DE] px-4 py-3 text-base font-extrabold text-[#FF6B0A] transition hover:bg-[#FFE3C8]"
+                  className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-[#FFF0DE] px-4 py-3 text-base font-extrabold text-[#FF6B0A] transition hover:bg-[#FFE3C8]"
                 >
                   <RotateCcw size={20} />
                   Switch
@@ -835,7 +849,7 @@ export default function Inventory() {
                 <button
                   type="button"
                   onClick={capturePhoto}
-                  className="inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-[#FF6B0A] px-4 py-3 text-base font-extrabold text-white transition hover:bg-[#E85F08]"
+                  className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-[#FF6B0A] px-4 py-3 text-base font-extrabold text-white transition hover:bg-[#E85F08]"
                 >
                   <Camera size={20} />
                   Capture
@@ -858,14 +872,14 @@ function InventorySummaryCard({
 }: {
   label: string;
   value: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   warning?: boolean;
   danger?: boolean;
 }) {
   return (
-    <div className="rounded-[24px] border border-[#E6D2BD] bg-[#FFF8F1] p-5 shadow-sm">
+    <div className="rounded-[20px] border border-[#E6D2BD] bg-[#FFF8F1] p-3 shadow-sm sm:p-4">
       <div
-        className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl ${
+        className={`mb-2 flex h-10 w-10 items-center justify-center rounded-2xl ${
           danger
             ? "bg-red-50 text-red-600"
             : warning
@@ -876,10 +890,10 @@ function InventorySummaryCard({
         {icon}
       </div>
 
-      <p className="text-base font-bold text-[#6F625A]">{label}</p>
+      <p className="text-sm font-bold text-[#6F625A]">{label}</p>
 
       <p
-        className={`mt-1 text-3xl font-extrabold ${
+        className={`mt-0.5 text-2xl font-extrabold leading-tight ${
           danger
             ? "text-red-600"
             : warning
@@ -893,7 +907,6 @@ function InventorySummaryCard({
   );
 }
 
-// Product Card
 function ProductCard({
   product,
   formatPeso,
@@ -909,7 +922,7 @@ function ProductCard({
   const isOutOfStock = product.stock_quantity === 0;
 
   return (
-    <article className="overflow-hidden rounded-[24px] border border-[#E6D2BD] bg-[#FFF8F1] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+    <article className="overflow-hidden rounded-[20px] border border-[#E6D2BD] bg-[#FFF8F1] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
       {/* Image */}
       <div className="flex aspect-[4/3] items-center justify-center overflow-hidden bg-[#FFFDF9]">
         {product.image_url ? (
@@ -920,35 +933,29 @@ function ProductCard({
             loading="lazy"
           />
         ) : (
-          <Package size={56} className="text-[#FF6B0A]/25" />
+          <Package size={42} className="text-[#FF6B0A]/25" />
         )}
       </div>
 
       {/* Info */}
-      <div className="p-5">
-        <div className="mb-3 flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h3 className="line-clamp-2 text-lg font-extrabold leading-snug text-[#1F1712]">
-              {product.name}
-            </h3>
+      <div className="p-3.5">
+        <div className="mb-2 flex items-start justify-between gap-2">
+          <h3 className="min-w-0 flex-1 break-words text-sm font-extrabold leading-snug text-[#1F1712]">
+            {product.name}
+          </h3>
 
-            <p className="mt-1 text-sm font-bold text-[#7C6D64]">
-              {product.category}
-            </p>
-          </div>
-
-          <span className="shrink-0 rounded-full bg-[#FFF0DE] px-3 py-1 text-xs font-extrabold text-[#FF6B0A]">
+          <span className="shrink-0 rounded-full bg-[#FFF0DE] px-2 py-0.5 text-[11px] font-extrabold text-[#FF6B0A]">
             {product.category}
           </span>
         </div>
 
-        <p className="mb-4 text-2xl font-extrabold text-[#FF6B0A]">
+        <p className="mb-2 text-xl font-extrabold leading-tight text-[#FF6B0A]">
           {formatPeso(product.price)}
         </p>
 
         {/* Stock Badge */}
         <div
-          className={`mb-5 inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-extrabold ${
+          className={`mb-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-extrabold ${
             isOutOfStock
               ? "bg-red-50 text-red-600"
               : isLowStock
@@ -957,7 +964,7 @@ function ProductCard({
           }`}
         >
           <span
-            className={`h-2 w-2 rounded-full ${
+            className={`h-1.5 w-1.5 rounded-full ${
               isOutOfStock
                 ? "bg-red-500"
                 : isLowStock
@@ -967,29 +974,29 @@ function ProductCard({
           />
 
           {isOutOfStock
-            ? "Out of Stock"
+            ? "Out"
             : isLowStock
-              ? `Low Stock (${product.stock_quantity})`
+              ? `Low (${product.stock_quantity})`
               : `${product.stock_quantity} in stock`}
         </div>
 
         {/* Actions */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={onEdit}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] px-3 py-3 text-base font-extrabold text-[#6F625A] transition hover:border-[#FF6B0A] hover:text-[#FF6B0A] focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20"
+            className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-[#E6D2BD] bg-[#FFFDF9] px-2 py-2 text-sm font-extrabold text-[#6F625A] transition hover:border-[#FF6B0A] hover:text-[#FF6B0A] focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20"
           >
-            <Pencil size={18} />
+            <Pencil size={15} />
             Edit
           </button>
 
           <button
             type="button"
             onClick={onDelete}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-red-100 bg-red-50 px-3 py-3 text-base font-extrabold text-red-600 transition hover:border-red-300 hover:bg-red-100 focus:outline-none focus:ring-4 focus:ring-red-500/15"
+            className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-red-100 bg-red-50 px-2 py-2 text-sm font-extrabold text-red-600 transition hover:border-red-300 hover:bg-red-100 focus:outline-none focus:ring-4 focus:ring-red-500/15"
           >
-            <Trash2 size={18} />
+            <Trash2 size={15} />
             Delete
           </button>
         </div>

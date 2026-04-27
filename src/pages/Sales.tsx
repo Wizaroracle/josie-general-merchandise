@@ -65,7 +65,7 @@ export default function Sales() {
   };
 
   const displayDate = useMemo(() => {
-    return format(new Date(dateFilter + "T00:00:00"), "MMMM d, yyyy (EEEE)");
+    return format(new Date(dateFilter + "T00:00:00"), "MMMM d, yyyy");
   }, [dateFilter]);
 
   const fetchSales = useCallback(
@@ -229,7 +229,9 @@ export default function Sales() {
       body: [
         [
           "Total Sales",
-          `PHP ${filteredTotal.toLocaleString("en-PH", { minimumFractionDigits: 2 })}`,
+          `PHP ${filteredTotal.toLocaleString("en-PH", {
+            minimumFractionDigits: 2,
+          })}`,
         ],
         ["Transactions", filtered.length.toString()],
         ["Items Sold", filteredItemsSold.toString()],
@@ -365,26 +367,27 @@ export default function Sales() {
   }
 
   return (
-    <main className="min-h-full bg-[#F6F0EA] p-4 text-[#1F1712] sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <main className="h-full overflow-hidden bg-[#F6F0EA] p-3 text-[#1F1712] sm:p-4 lg:p-5">
+      <div className="mx-auto grid h-full max-w-[1600px] grid-rows-[auto_auto_auto_minmax(0,1fr)] gap-4">
         {/* Header */}
-        <section className="rounded-[24px] border border-[#E6D2BD] bg-[#F8F2EC] p-5 shadow-sm sm:p-6 lg:p-7">
-          <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-            <div>
-              <h1 className="text-3xl font-extrabold tracking-tight text-[#1F1712] sm:text-4xl">
+        <section className="rounded-[22px] border border-[#E6D2BD] bg-[#F8F2EC] p-4 shadow-sm">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div className="min-w-0">
+              <h1 className="text-2xl font-extrabold tracking-tight text-[#1F1712] sm:text-3xl">
                 Sales Log
               </h1>
 
-              <p className="mt-1 text-base font-semibold text-[#6F625A] sm:text-lg">
+              <p className="mt-0.5 text-sm font-semibold text-[#6F625A] sm:text-base">
                 View and track all recorded sales.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:flex xl:items-center">
-              <div className="relative sm:col-span-2 lg:col-span-1">
+            {/* Compact tablet-friendly filters */}
+            <div className="grid grid-cols-[minmax(150px,1fr)_auto_auto_auto] gap-2">
+              <div className="relative min-w-0">
                 <Calendar
-                  size={20}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7C6D64]"
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7C6D64]"
                 />
 
                 <input
@@ -394,14 +397,14 @@ export default function Sales() {
                     setExpandedId(null);
                     setDateFilter(event.target.value);
                   }}
-                  className="min-h-13 w-full rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] py-3 pl-12 pr-4 text-base font-extrabold text-[#1F1712] outline-none transition focus:border-[#FF6B0A] focus:ring-4 focus:ring-[#FF6B0A]/15"
+                  className="min-h-[46px] w-full rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] py-2.5 pl-10 pr-3 text-sm font-extrabold text-[#1F1712] outline-none transition focus:border-[#FF6B0A] focus:ring-4 focus:ring-[#FF6B0A]/15"
                 />
               </div>
 
               <button
                 type="button"
                 onClick={() => setDateFilter(todayStr())}
-                className={`min-h-13 rounded-2xl px-5 py-3 text-base font-extrabold transition-all focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20 ${
+                className={`min-h-[46px] rounded-2xl px-4 py-2.5 text-sm font-extrabold transition-all focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20 ${
                   dateFilter === todayStr()
                     ? "bg-[#FF6B0A] text-white shadow-lg shadow-[#FF6B0A]/20"
                     : "border border-[#E6D2BD] bg-[#FFFDF9] text-[#6F625A] hover:border-[#FF6B0A] hover:text-[#FF6B0A]"
@@ -414,64 +417,66 @@ export default function Sales() {
                 type="button"
                 onClick={() => void fetchSales(true)}
                 disabled={isRefreshing}
-                className="inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] px-5 py-3 text-base font-extrabold text-[#6F625A] transition hover:border-[#FF6B0A] hover:text-[#FF6B0A] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20"
+                className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] px-4 py-2.5 text-sm font-extrabold text-[#6F625A] transition hover:border-[#FF6B0A] hover:text-[#FF6B0A] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20"
               >
                 <RefreshCw
-                  size={20}
+                  size={18}
                   className={isRefreshing ? "animate-spin" : ""}
                 />
-                Refresh
+                <span className="hidden sm:inline">
+                  {isRefreshing ? "Refreshing" : "Refresh"}
+                </span>
               </button>
 
               <button
                 type="button"
                 onClick={downloadPDF}
                 disabled={filtered.length === 0}
-                className="inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-[#FF6B0A] px-5 py-3 text-base font-extrabold text-white shadow-lg shadow-[#FF6B0A]/20 transition hover:bg-[#E85F08] disabled:cursor-not-allowed disabled:bg-[#D8C8B8] disabled:shadow-none focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/25"
+                className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-2xl bg-[#FF6B0A] px-4 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-[#FF6B0A]/20 transition hover:bg-[#E85F08] disabled:cursor-not-allowed disabled:bg-[#D8C8B8] disabled:shadow-none focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/25"
               >
-                <Download size={20} />
-                Download PDF
+                <Download size={18} />
+                <span className="hidden sm:inline">PDF</span>
               </button>
             </div>
           </div>
         </section>
 
-        {/* Summary Cards */}
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {/* Summary Cards - always same row */}
+        <section className="grid grid-cols-3 gap-3">
           <SummaryCard
-            icon={<Receipt size={24} />}
+            icon={<Receipt size={21} />}
             label={dateFilter === todayStr() ? "Today's Sales" : "Total Sales"}
             value={formatPeso(totalSales)}
           />
 
           <SummaryCard
-            icon={<ShoppingBag size={24} />}
+            icon={<ShoppingBag size={21} />}
             label="Transactions"
             value={sales.length.toString()}
           />
 
           <SummaryCard
-            icon={<Package size={24} />}
+            icon={<Package size={21} />}
             label="Items Sold"
             value={totalItemsSold.toString()}
           />
         </section>
 
         {/* Search */}
-        <section className="rounded-[24px] border border-[#E6D2BD] bg-[#FFF8F1] p-4 shadow-sm sm:p-5">
-          <div className="flex flex-col gap-3">
+        <section className="rounded-[22px] border border-[#E6D2BD] bg-[#FFF8F1] p-3 shadow-sm sm:p-4">
+          <div className="flex flex-col gap-2">
             <div className="relative">
               <Search
-                size={22}
+                size={20}
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7C6D64]"
               />
 
               <input
                 type="text"
-                placeholder="Search by product, payment method, cashier, or notes..."
+                placeholder="Search product, payment, cashier, or notes..."
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                className="min-h-14 w-full rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] py-3.5 pl-12 pr-12 text-base font-semibold text-[#1F1712] outline-none transition placeholder:text-[#A8988D] focus:border-[#FF6B0A] focus:ring-4 focus:ring-[#FF6B0A]/15"
+                className="min-h-[50px] w-full rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] py-3 pl-11 pr-12 text-base font-semibold text-[#1F1712] outline-none transition placeholder:text-[#A8988D] focus:border-[#FF6B0A] focus:ring-4 focus:ring-[#FF6B0A]/15"
               />
 
               {search && (
@@ -486,7 +491,7 @@ export default function Sales() {
               )}
             </div>
 
-            <div className="flex flex-col gap-1 text-sm font-semibold text-[#7C6D64] sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-1 text-xs font-bold text-[#7C6D64] sm:flex-row sm:items-center sm:justify-between">
               <p>{displayDate}</p>
 
               <p>
@@ -497,28 +502,30 @@ export default function Sales() {
           </div>
         </section>
 
-        {/* Sales List */}
-        {filtered.length === 0 ? (
-          <EmptyState
-            hasSales={sales.length > 0}
-            isToday={dateFilter === todayStr()}
-          />
-        ) : (
-          <section className="space-y-4">
-            {filtered.map((sale, index) => (
-              <SaleCard
-                key={sale.id}
-                sale={sale}
-                index={filtered.length - index}
-                isExpanded={expandedId === sale.id}
-                formatPeso={formatPeso}
-                onToggle={() =>
-                  setExpandedId(expandedId === sale.id ? null : sale.id)
-                }
-              />
-            ))}
-          </section>
-        )}
+        {/* Sales List - only this area scrolls */}
+        <section className="min-h-0 overflow-y-auto pr-1">
+          {filtered.length === 0 ? (
+            <EmptyState
+              hasSales={sales.length > 0}
+              isToday={dateFilter === todayStr()}
+            />
+          ) : (
+            <div className="space-y-3 pb-2">
+              {filtered.map((sale, index) => (
+                <SaleCard
+                  key={sale.id}
+                  sale={sale}
+                  index={filtered.length - index}
+                  isExpanded={expandedId === sale.id}
+                  formatPeso={formatPeso}
+                  onToggle={() =>
+                    setExpandedId(expandedId === sale.id ? null : sale.id)
+                  }
+                />
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </main>
   );
@@ -534,14 +541,19 @@ function SummaryCard({
   value: string;
 }) {
   return (
-    <div className="rounded-[24px] border border-[#E6D2BD] bg-[#FFF8F1] p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-6">
-      <div className="mb-4 flex h-13 w-13 items-center justify-center rounded-2xl bg-[#FFF0DE] text-[#FF6B0A]">
+    <div className="min-w-0 rounded-[20px] border border-[#E6D2BD] bg-[#FFF8F1] p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-4">
+      <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-[#FFF0DE] text-[#FF6B0A]">
         {icon}
       </div>
 
-      <p className="text-base font-bold text-[#6F625A]">{label}</p>
+      <p className="truncate text-xs font-extrabold text-[#6F625A] sm:text-sm">
+        {label}
+      </p>
 
-      <p className="mt-1 break-words text-3xl font-extrabold leading-tight text-[#1F1712]">
+      <p
+        className="mt-1 truncate text-xl font-extrabold leading-tight text-[#1F1712] sm:text-2xl"
+        title={value}
+      >
         {value}
       </p>
     </div>
@@ -566,20 +578,20 @@ function SaleCard({
     .join(", ");
 
   return (
-    <article className="overflow-hidden rounded-[24px] border border-[#E6D2BD] bg-[#FFF8F1] shadow-sm">
+    <article className="overflow-hidden rounded-[20px] border border-[#E6D2BD] bg-[#FFF8F1] shadow-sm">
       <button
         type="button"
         onClick={onToggle}
-        className="w-full p-4 text-left transition hover:bg-[#FFF0DE]/40 focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/15 sm:p-5"
+        className="w-full p-3 text-left transition hover:bg-[#FFF0DE]/40 focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/15 sm:p-4"
       >
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-          <div className="flex items-center gap-3 lg:w-60 lg:shrink-0">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#FFF0DE] text-[#FF6B0A]">
-              <span className="text-sm font-extrabold">#{index}</span>
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#FFF0DE] text-[#FF6B0A]">
+              <span className="text-xs font-extrabold">#{index}</span>
             </div>
 
-            <div className="min-w-0">
-              <p className="text-base font-extrabold text-[#1F1712]">
+            <div className="hidden min-w-0 md:block">
+              <p className="text-sm font-extrabold text-[#1F1712]">
                 {new Date(sale.created_at).toLocaleTimeString("en-PH", {
                   hour: "numeric",
                   minute: "2-digit",
@@ -587,27 +599,41 @@ function SaleCard({
                 })}
               </p>
 
-              <p className="break-words text-sm font-semibold text-[#7C6D64]">
+              <p className="truncate text-xs font-semibold text-[#7C6D64]">
                 {sale.recorded_by_name}
               </p>
             </div>
           </div>
 
-          <div className="min-w-0 flex-1">
-            <p className="break-words text-base font-bold leading-relaxed text-[#3B312A]">
+          <div className="min-w-0">
+            <div className="mb-1 flex flex-wrap items-center gap-2 md:hidden">
+              <p className="text-sm font-extrabold text-[#1F1712]">
+                {new Date(sale.created_at).toLocaleTimeString("en-PH", {
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                })}
+              </p>
+
+              <p className="text-xs font-semibold text-[#7C6D64]">
+                {sale.recorded_by_name}
+              </p>
+            </div>
+
+            <p className="line-clamp-2 text-sm font-bold leading-snug text-[#3B312A] sm:text-base">
               {itemSummary}
             </p>
 
             {sale.notes && (
-              <p className="mt-1 break-words text-sm font-semibold italic text-[#7C6D64]">
+              <p className="mt-1 line-clamp-1 text-xs font-semibold italic text-[#7C6D64]">
                 Note: {sale.notes}
               </p>
             )}
           </div>
 
-          <div className="flex items-center justify-between gap-3 lg:w-72 lg:justify-end">
+          <div className="flex shrink-0 items-center gap-2">
             <span
-              className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-extrabold ${
+              className={`hidden rounded-full border px-2.5 py-1 text-xs font-extrabold sm:inline-flex ${
                 paymentColor[sale.payment_method] ??
                 "border-[#E6D2BD] bg-[#FFFDF9] text-[#6F625A]"
               }`}
@@ -615,41 +641,52 @@ function SaleCard({
               {sale.payment_method}
             </span>
 
-            <p className="text-right text-xl font-extrabold text-[#FF6B0A]">
+            <p className="text-right text-base font-extrabold text-[#FF6B0A] sm:text-lg">
               {formatPeso(sale.total_amount)}
             </p>
 
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#FFFDF9] text-[#6F625A]">
-              {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FFFDF9] text-[#6F625A]">
+              {isExpanded ? <ChevronUp size={19} /> : <ChevronDown size={19} />}
             </div>
           </div>
+        </div>
+
+        <div className="mt-2 flex items-center gap-2 sm:hidden">
+          <span
+            className={`rounded-full border px-2.5 py-1 text-xs font-extrabold ${
+              paymentColor[sale.payment_method] ??
+              "border-[#E6D2BD] bg-[#FFFDF9] text-[#6F625A]"
+            }`}
+          >
+            {sale.payment_method}
+          </span>
         </div>
       </button>
 
       {isExpanded && (
-        <div className="border-t border-[#E6D2BD] bg-[#FFFDF9] px-4 py-4 sm:px-5">
-          <p className="mb-3 text-sm font-extrabold uppercase tracking-wide text-[#6F625A]">
+        <div className="border-t border-[#E6D2BD] bg-[#FFFDF9] px-3 py-3 sm:px-4">
+          <p className="mb-2 text-xs font-extrabold uppercase tracking-wide text-[#6F625A]">
             Items Sold
           </p>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {sale.items.map((item, index) => (
               <div
                 key={`${item.product_name}-${index}`}
-                className="rounded-2xl border border-[#E6D2BD] bg-[#FFF8F1] p-4"
+                className="rounded-2xl border border-[#E6D2BD] bg-[#FFF8F1] p-3"
               >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex min-w-0 gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FFF0DE] text-[#FF6B0A]">
-                      <Package size={19} />
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FFF0DE] text-[#FF6B0A]">
+                      <Package size={17} />
                     </div>
 
                     <div className="min-w-0">
-                      <p className="break-words text-base font-extrabold text-[#1F1712]">
+                      <p className="break-words text-sm font-extrabold text-[#1F1712] sm:text-base">
                         {item.product_name}
                       </p>
 
-                      <p className="text-sm font-semibold text-[#7C6D64]">
+                      <p className="text-xs font-semibold text-[#7C6D64] sm:text-sm">
                         Quantity: {item.quantity} ×{" "}
                         {formatPeso(item.unit_price)}
                       </p>
@@ -657,9 +694,9 @@ function SaleCard({
                   </div>
 
                   <div className="text-left sm:text-right">
-                    <p className="text-sm font-bold text-[#7C6D64]">Subtotal</p>
+                    <p className="text-xs font-bold text-[#7C6D64]">Subtotal</p>
 
-                    <p className="text-lg font-extrabold text-[#FF6B0A]">
+                    <p className="text-base font-extrabold text-[#FF6B0A]">
                       {formatPeso(item.subtotal)}
                     </p>
                   </div>
@@ -668,12 +705,10 @@ function SaleCard({
             ))}
           </div>
 
-          <div className="mt-4 flex items-center justify-between rounded-2xl border border-[#E6D2BD] bg-[#FFF0DE] px-4 py-3">
-            <span className="text-base font-extrabold text-[#6F625A]">
-              Total
-            </span>
+          <div className="mt-3 flex items-center justify-between rounded-2xl border border-[#E6D2BD] bg-[#FFF0DE] px-4 py-3">
+            <span className="text-sm font-extrabold text-[#6F625A]">Total</span>
 
-            <span className="text-xl font-extrabold text-[#1F1712]">
+            <span className="text-lg font-extrabold text-[#1F1712]">
               {formatPeso(sale.total_amount)}
             </span>
           </div>
@@ -691,8 +726,8 @@ function EmptyState({
   isToday: boolean;
 }) {
   return (
-    <div className="flex min-h-[360px] flex-col items-center justify-center rounded-[24px] border border-dashed border-[#E6D2BD] bg-[#FFF8F1] px-5 text-center shadow-sm">
-      <ShoppingBag size={62} className="mb-4 text-[#FF6B0A]/35" />
+    <div className="flex min-h-[280px] flex-col items-center justify-center rounded-[22px] border border-dashed border-[#E6D2BD] bg-[#FFF8F1] px-5 text-center shadow-sm">
+      <ShoppingBag size={54} className="mb-4 text-[#FF6B0A]/35" />
 
       <p className="text-2xl font-extrabold text-[#1F1712]">
         {hasSales ? "No matching sales found" : "No sales recorded"}
@@ -711,7 +746,7 @@ function EmptyState({
 
 function SalesLoading() {
   return (
-    <div className="flex min-h-full items-center justify-center bg-[#F6F0EA] p-6">
+    <div className="flex h-full items-center justify-center bg-[#F6F0EA] p-6">
       <div className="relative flex w-full max-w-sm flex-col items-center overflow-hidden rounded-[28px] border border-[#E6D2BD] bg-[#FFF8F1] px-8 py-8 text-center shadow-sm">
         <div className="absolute inset-x-0 top-0 h-1.5 bg-[#FF6B0A]" />
 

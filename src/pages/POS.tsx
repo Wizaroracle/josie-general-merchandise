@@ -71,6 +71,7 @@ export default function POS() {
 
     if (error) {
       toast.error("Failed to load products.");
+      setProducts([]);
       setIsLoading(false);
       setIsRefreshing(false);
       return;
@@ -294,19 +295,19 @@ export default function POS() {
   };
 
   return (
-    <main className="min-h-full bg-[#F6F0EA] p-4 pb-28 text-[#1F1712] sm:p-6 sm:pb-28 lg:p-8 xl:pb-8">
-      <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_430px]">
+    <main className="h-full overflow-hidden bg-[#F6F0EA] p-3 text-[#1F1712] sm:p-4 lg:p-5">
+      <div className="mx-auto grid h-full max-w-[1600px] grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_320px] lg:grid-cols-[minmax(0,1fr)_350px] xl:grid-cols-[minmax(0,1fr)_380px]">
         {/* Products Section */}
-        <section className="min-w-0 space-y-5">
+        <section className="grid min-h-0 grid-rows-[auto_auto_minmax(0,1fr)] gap-4">
           {/* Header */}
-          <div className="rounded-[24px] border border-[#E6D2BD] bg-[#F8F2EC] p-5 shadow-sm sm:p-6 lg:p-7">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <section className="rounded-[22px] border border-[#E6D2BD] bg-[#F8F2EC] p-4 shadow-sm sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h1 className="text-3xl font-extrabold tracking-tight text-[#1F1712] sm:text-4xl">
+                <h1 className="text-2xl font-extrabold tracking-tight text-[#1F1712] sm:text-3xl">
                   New Sale
                 </h1>
 
-                <p className="mt-1 text-base font-semibold text-[#6F625A] sm:text-lg">
+                <p className="mt-1 text-sm font-semibold text-[#6F625A] sm:text-base">
                   Tap a product to add it to the cart.
                 </p>
               </div>
@@ -317,24 +318,26 @@ export default function POS() {
                 <button
                   type="button"
                   onClick={() => setShowMobileCart(true)}
-                  className="rounded-2xl border border-[#E6D2BD] bg-[#FFF8F1] px-4 py-3 text-left transition hover:border-[#FF6B0A] focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20 xl:pointer-events-none"
+                  className="rounded-2xl border border-[#E6D2BD] bg-[#FFF8F1] px-4 py-3 text-left transition hover:border-[#FF6B0A] focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20 md:pointer-events-none"
                 >
-                  <p className="text-sm font-bold text-[#7C6D64]">In Cart</p>
-                  <p className="text-2xl font-extrabold text-[#FF6B0A]">
+                  <p className="text-xs font-extrabold text-[#7C6D64]">
+                    In Cart
+                  </p>
+                  <p className="text-2xl font-extrabold leading-tight text-[#FF6B0A]">
                     {cartItemCount}
                   </p>
                 </button>
               </div>
             </div>
-          </div>
+          </section>
 
           {/* Search and Filters */}
-          <div className="rounded-[24px] border border-[#E6D2BD] bg-[#FFF8F1] p-4 shadow-sm sm:p-5">
-            <div className="flex flex-col gap-4">
+          <section className="rounded-[22px] border border-[#E6D2BD] bg-[#FFF8F1] p-3 shadow-sm sm:p-4">
+            <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-3 lg:flex-row">
                 <div className="relative flex-1">
                   <Search
-                    size={22}
+                    size={20}
                     className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7C6D64]"
                   />
 
@@ -343,7 +346,7 @@ export default function POS() {
                     placeholder="Search products..."
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    className="min-h-14 w-full rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] py-3.5 pl-12 pr-12 text-base font-semibold text-[#1F1712] outline-none transition placeholder:text-[#A8988D] focus:border-[#FF6B0A] focus:ring-4 focus:ring-[#FF6B0A]/15"
+                    className="min-h-[50px] w-full rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] py-3 pl-11 pr-12 text-base font-semibold text-[#1F1712] outline-none transition placeholder:text-[#A8988D] focus:border-[#FF6B0A] focus:ring-4 focus:ring-[#FF6B0A]/15"
                   />
 
                   {search && (
@@ -362,7 +365,7 @@ export default function POS() {
                   type="button"
                   onClick={() => void fetchProducts(true)}
                   disabled={isRefreshing}
-                  className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] px-5 py-3 text-base font-extrabold text-[#6F625A] transition hover:border-[#FF6B0A] hover:text-[#FF6B0A] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20"
+                  className="inline-flex min-h-[50px] items-center justify-center gap-2 rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] px-5 py-3 text-base font-extrabold text-[#6F625A] transition hover:border-[#FF6B0A] hover:text-[#FF6B0A] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20"
                 >
                   <RefreshCw
                     size={20}
@@ -378,7 +381,7 @@ export default function POS() {
                     key={category}
                     type="button"
                     onClick={() => setSelectedCategory(category)}
-                    className={`min-h-12 shrink-0 rounded-2xl px-5 py-3 text-base font-extrabold transition-all focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20 ${
+                    className={`min-h-[44px] shrink-0 rounded-2xl px-4 py-2.5 text-sm font-extrabold transition-all focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20 ${
                       selectedCategory === category
                         ? "bg-[#FF6B0A] text-white shadow-lg shadow-[#FF6B0A]/20"
                         : "border border-[#E6D2BD] bg-[#FFFDF9] text-[#6F625A] hover:border-[#FF6B0A] hover:text-[#FF6B0A]"
@@ -389,59 +392,74 @@ export default function POS() {
                 ))}
               </div>
 
-              <p className="text-sm font-semibold text-[#7C6D64]">
+              <p className="text-xs font-bold text-[#7C6D64]">
                 Showing {filteredProducts.length} product
                 {filteredProducts.length === 1 ? "" : "s"}
               </p>
             </div>
-          </div>
+          </section>
 
           {/* Products Grid */}
-          {isLoading ? (
-            <div className="flex min-h-[360px] items-center justify-center rounded-[24px] border border-[#E6D2BD] bg-[#FFF8F1]">
-              <div className="flex flex-col items-center gap-4">
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#FF6B0A] border-t-transparent" />
-                <p className="text-lg font-bold text-[#3B312A]">
-                  Loading products...
+          <section className="min-h-0 overflow-y-auto pr-1">
+            {isLoading ? (
+              <div className="flex min-h-[280px] items-center justify-center rounded-[22px] border border-[#E6D2BD] bg-[#FFF8F1]">
+                <div className="relative flex w-full max-w-xs flex-col items-center overflow-hidden rounded-[24px] border border-[#E6D2BD] bg-[#FFF8F1] px-7 py-7 text-center shadow-sm">
+                  <div className="absolute inset-x-0 top-0 h-1.5 bg-[#FF6B0A]" />
+
+                  <div className="relative mb-2 flex h-16 w-16 items-center justify-center">
+                    <div className="absolute h-16 w-16 animate-spin rounded-full border-4 border-[#FFE3C8] border-t-[#FF6B0A]" />
+
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FFF0DE]">
+                      <Package size={25} className="text-[#FF6B0A]" />
+                    </div>
+                  </div>
+
+                  <p className="text-lg font-extrabold text-[#1F1712]">
+                    Loading products
+                  </p>
+
+                  <p className="mt-1 text-sm font-semibold text-[#7C6D64]">
+                    Please wait...
+                  </p>
+                </div>
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="flex min-h-[280px] flex-col items-center justify-center rounded-[22px] border border-dashed border-[#E6D2BD] bg-[#FFF8F1] px-5 text-center">
+                <Package size={54} className="mb-4 text-[#FF6B0A]/35" />
+
+                <p className="text-2xl font-extrabold text-[#1F1712]">
+                  No products available
+                </p>
+
+                <p className="mt-2 max-w-md text-base font-medium text-[#6F625A]">
+                  Try another search or category. Products with zero stock are
+                  hidden from this sale screen.
                 </p>
               </div>
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="flex min-h-[360px] flex-col items-center justify-center rounded-[24px] border border-dashed border-[#E6D2BD] bg-[#FFF8F1] px-5 text-center">
-              <Package size={60} className="mb-4 text-[#FF6B0A]/35" />
+            ) : (
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(145px,1fr))] gap-3 pb-2">
+                {filteredProducts.map((product) => {
+                  const cartItem = cart.find(
+                    (item) => item.product.id === product.id,
+                  );
 
-              <p className="text-2xl font-extrabold text-[#1F1712]">
-                No products available
-              </p>
-
-              <p className="mt-2 max-w-md text-base font-medium text-[#6F625A]">
-                Try another search or category. Products with zero stock are
-                hidden from this sale screen.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
-              {filteredProducts.map((product) => {
-                const cartItem = cart.find(
-                  (item) => item.product.id === product.id,
-                );
-
-                return (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    quantityInCart={cartItem?.quantity ?? 0}
-                    formatPeso={formatPeso}
-                    onAdd={() => addToCart(product)}
-                  />
-                );
-              })}
-            </div>
-          )}
+                  return (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      quantityInCart={cartItem?.quantity ?? 0}
+                      formatPeso={formatPeso}
+                      onAdd={() => addToCart(product)}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </section>
         </section>
 
-        {/* Desktop Cart */}
-        <aside className="hidden xl:block xl:sticky xl:top-6 xl:h-[calc(100dvh-3rem)]">
+        {/* Tablet/Desktop Cart - visible on tablet and larger */}
+        <aside className="hidden min-h-0 md:block">
           <CartPanel
             cart={cart}
             cartItemCount={cartItemCount}
@@ -463,11 +481,11 @@ export default function POS() {
 
       {/* Mobile Floating Cart Button */}
       {cartItemCount > 0 && !showMobileCart && !showSuccess && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E6D2BD] bg-[#FFF8F1] p-3 shadow-[0_-8px_30px_rgba(59,49,42,0.12)] xl:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E6D2BD] bg-[#FFF8F1] p-3 shadow-[0_-8px_30px_rgba(59,49,42,0.12)] md:hidden">
           <button
             type="button"
             onClick={() => setShowMobileCart(true)}
-            className="flex min-h-16 w-full items-center justify-between gap-4 rounded-2xl bg-[#FF6B0A] px-5 py-4 text-white shadow-lg shadow-[#FF6B0A]/20"
+            className="flex min-h-[60px] w-full items-center justify-between gap-4 rounded-2xl bg-[#FF6B0A] px-5 py-3 text-white shadow-lg shadow-[#FF6B0A]/20"
           >
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
@@ -491,7 +509,7 @@ export default function POS() {
 
       {/* Mobile Cart Drawer */}
       {showMobileCart && (
-        <div className="fixed inset-0 z-50 xl:hidden">
+        <div className="fixed inset-0 z-50 md:hidden">
           <button
             type="button"
             aria-label="Close cart"
@@ -501,6 +519,7 @@ export default function POS() {
 
           <div className="absolute inset-x-0 bottom-0 h-[92dvh] rounded-t-[28px] bg-[#FFF8F1] shadow-2xl">
             <CartPanel
+              mobile
               cart={cart}
               cartItemCount={cartItemCount}
               total={total}
@@ -508,7 +527,6 @@ export default function POS() {
               notes={notes}
               isSubmitting={isSubmitting}
               formatPeso={formatPeso}
-              mobile
               onClose={() => setShowMobileCart(false)}
               onPaymentChange={setPaymentMethod}
               onNotesChange={setNotes}
@@ -566,8 +584,10 @@ export default function POS() {
 function InfoCard({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-2xl border border-[#E6D2BD] bg-[#FFF8F1] px-4 py-3">
-      <p className="text-sm font-bold text-[#7C6D64]">{label}</p>
-      <p className="text-2xl font-extrabold text-[#1F1712]">{value}</p>
+      <p className="text-xs font-extrabold text-[#7C6D64]">{label}</p>
+      <p className="text-2xl font-extrabold leading-tight text-[#1F1712]">
+        {value}
+      </p>
     </div>
   );
 }
@@ -591,15 +611,15 @@ function ProductCard({
       type="button"
       onClick={onAdd}
       aria-label={`Add ${product.name} to cart`}
-      className={`group relative flex h-full flex-col overflow-hidden rounded-[24px] border bg-[#FFF8F1] text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20 ${
+      className={`group relative flex flex-col overflow-hidden rounded-[20px] border bg-[#FFF8F1] text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20 ${
         quantityInCart > 0
           ? "border-[#FF6B0A] shadow-[#FF6B0A]/15"
           : "border-[#E6D2BD]"
       }`}
     >
       {quantityInCart > 0 && (
-        <div className="absolute right-3 top-3 z-10 flex h-10 min-w-10 items-center justify-center rounded-full bg-[#FF6B0A] px-2 text-white shadow-md">
-          <span className="text-sm font-extrabold">{quantityInCart}</span>
+        <div className="absolute right-2 top-2 z-10 flex h-8 min-w-8 items-center justify-center rounded-full bg-[#FF6B0A] px-2 text-white shadow-md">
+          <span className="text-xs font-extrabold">{quantityInCart}</span>
         </div>
       )}
 
@@ -612,46 +632,44 @@ function ProductCard({
             loading="lazy"
           />
         ) : (
-          <Package size={58} className="text-[#FF6B0A]/25" />
+          <Package size={42} className="text-[#FF6B0A]/25" />
         )}
       </div>
 
-      <div className="flex flex-1 flex-col p-5">
-        <div className="mb-4 flex items-start gap-2">
-          <h3 className="min-w-0 flex-1 whitespace-normal break-words text-lg font-extrabold leading-snug text-[#1F1712]">
+      <div className="flex flex-1 flex-col p-3">
+        <div className="mb-2">
+          <p className="break-words text-sm font-extrabold leading-snug text-[#1F1712]">
             {product.name}
-          </h3>
+          </p>
 
-          <span className="shrink-0 rounded-full bg-[#FFF0DE] px-3 py-1 text-sm font-extrabold text-[#FF6B0A]">
+          <span className="mt-1 inline-flex rounded-full bg-[#FFF0DE] px-2 py-0.5 text-[11px] font-extrabold text-[#FF6B0A]">
             {product.category}
           </span>
         </div>
 
-        <p className="mb-5 text-3xl font-extrabold leading-tight text-[#FF6B0A]">
+        <p className="mb-2 text-xl font-extrabold leading-tight text-[#FF6B0A]">
           {formatPeso(product.price)}
         </p>
 
-        <div className="mt-auto flex items-center justify-between gap-3">
+        <div className="mt-auto flex items-center justify-between gap-2">
           <span
-            className={`rounded-full px-4 py-3 text-base font-extrabold leading-tight ${
+            className={`rounded-full px-2.5 py-1.5 text-xs font-extrabold ${
               isLowStock
                 ? "bg-red-50 text-red-600"
                 : "bg-green-50 text-green-700"
             }`}
           >
-            {product.stock_quantity}
-            <br />
-            left
+            {product.stock_quantity} left
           </span>
 
           <span
-            className={`inline-flex min-h-12 items-center gap-2 rounded-2xl px-4 py-3 text-base font-extrabold ${
+            className={`inline-flex min-h-9 items-center gap-1 rounded-xl px-3 py-2 text-sm font-extrabold ${
               reachedMax
                 ? "bg-[#EAD8C7] text-[#6F625A]"
                 : "bg-[#FFF0DE] text-[#FF6B0A]"
             }`}
           >
-            <Plus size={18} />
+            <Plus size={15} />
             {reachedMax ? "Max" : "Add"}
           </span>
         </div>
@@ -700,31 +718,31 @@ function CartPanel({
       className={`grid min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden border-[#E6D2BD] bg-[#FFF8F1] ${
         mobile
           ? "h-[92dvh] rounded-t-[28px] border-t"
-          : "h-full rounded-[24px] border shadow-sm"
+          : "h-full rounded-[22px] border shadow-sm"
       }`}
     >
       {/* Cart Header */}
-      <div className="border-b border-[#E6D2BD] px-5 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FFF0DE] text-[#FF6B0A]">
-              <ShoppingCart size={23} />
+      <div className="border-b border-[#E6D2BD] px-4 py-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#FFF0DE] text-[#FF6B0A]">
+              <ShoppingCart size={22} />
             </div>
 
-            <div>
-              <h2 className="text-2xl font-extrabold text-[#1F1712]">Cart</h2>
+            <div className="min-w-0">
+              <h2 className="text-xl font-extrabold text-[#1F1712]">Cart</h2>
               <p className="text-sm font-semibold text-[#7C6D64]">
                 {cartItemCount} item{cartItemCount === 1 ? "" : "s"}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             {cart.length > 0 && (
               <button
                 type="button"
                 onClick={onClear}
-                className="rounded-2xl bg-red-50 px-3 py-2 text-sm font-extrabold text-red-600 transition hover:bg-red-100"
+                className="rounded-xl bg-red-50 px-3 py-2 text-sm font-extrabold text-red-600 transition hover:bg-red-100"
               >
                 Clear
               </button>
@@ -735,9 +753,9 @@ function CartPanel({
                 type="button"
                 onClick={onClose}
                 aria-label="Close cart"
-                className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FFF0DE] text-[#6F625A] transition hover:text-[#FF6B0A]"
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FFF0DE] text-[#6F625A] transition hover:text-[#FF6B0A]"
               >
-                <X size={22} />
+                <X size={21} />
               </button>
             )}
           </div>
@@ -745,21 +763,21 @@ function CartPanel({
       </div>
 
       {/* Cart Items */}
-      <div className="min-h-0 overflow-y-auto px-4 py-4">
+      <div className="min-h-0 overflow-y-auto px-3 py-3">
         {cart.length === 0 ? (
-          <div className="flex h-full min-h-[120px] flex-col items-center justify-center rounded-[20px] border border-dashed border-[#E6D2BD] bg-[#FFFDF9] px-4 py-6 text-center">
-            <ShoppingCart size={52} className="mb-3 text-[#FF6B0A]/35" />
+          <div className="flex h-full min-h-[160px] flex-col items-center justify-center rounded-[20px] border border-dashed border-[#E6D2BD] bg-[#FFFDF9] px-4 py-6 text-center">
+            <ShoppingCart size={48} className="mb-3 text-[#FF6B0A]/35" />
 
-            <p className="text-xl font-extrabold text-[#1F1712]">
+            <p className="text-lg font-extrabold text-[#1F1712]">
               Cart is empty
             </p>
 
-            <p className="mt-2 text-base font-medium text-[#6F625A]">
+            <p className="mt-1 text-sm font-semibold text-[#6F625A]">
               Tap a product card to add an item.
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {cart.map((item) => (
               <CartItemCard
                 key={item.product.id}
@@ -775,13 +793,13 @@ function CartPanel({
       </div>
 
       {/* Cart Footer */}
-      <div className="border-t border-[#E6D2BD] bg-[#FFF8F1] px-5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-        <div className="space-y-4">
+      <div className="border-t border-[#E6D2BD] bg-[#FFF8F1] px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+        <div className="space-y-3">
           {/* Payment Method */}
           <div>
             <div className="mb-2 flex items-center gap-2">
-              <Wallet size={18} className="text-[#FF6B0A]" />
-              <p className="text-sm font-extrabold uppercase tracking-wide text-[#6F625A]">
+              <Wallet size={17} className="text-[#FF6B0A]" />
+              <p className="text-xs font-extrabold uppercase tracking-wide text-[#6F625A]">
                 Payment Method
               </p>
             </div>
@@ -792,7 +810,7 @@ function CartPanel({
                   key={method}
                   type="button"
                   onClick={() => onPaymentChange(method)}
-                  className={`min-h-11 rounded-2xl px-3 py-2.5 text-base font-extrabold transition-all focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20 ${
+                  className={`min-h-[42px] rounded-xl px-3 py-2 text-sm font-extrabold transition-all focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20 ${
                     paymentMethod === method
                       ? "bg-[#FF6B0A] text-white shadow-md shadow-[#FF6B0A]/20"
                       : "border border-[#E6D2BD] bg-[#FFFDF9] text-[#6F625A] hover:border-[#FF6B0A] hover:text-[#FF6B0A]"
@@ -806,7 +824,7 @@ function CartPanel({
 
           {/* Notes */}
           <div>
-            <p className="mb-2 text-sm font-extrabold uppercase tracking-wide text-[#6F625A]">
+            <p className="mb-2 text-xs font-extrabold uppercase tracking-wide text-[#6F625A]">
               Notes Optional
             </p>
 
@@ -815,23 +833,23 @@ function CartPanel({
               placeholder="Example: Regular customer"
               value={notes}
               onChange={(event) => onNotesChange(event.target.value)}
-              className="min-h-[48px] w-full rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] px-4 py-3 text-base font-semibold text-[#1F1712] outline-none transition placeholder:text-[#A8988D] focus:border-[#FF6B0A] focus:ring-4 focus:ring-[#FF6B0A]/15"
+              className="min-h-[46px] w-full rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] px-4 py-3 text-sm font-semibold text-[#1F1712] outline-none transition placeholder:text-[#A8988D] focus:border-[#FF6B0A] focus:ring-4 focus:ring-[#FF6B0A]/15"
             />
           </div>
 
           {/* Total */}
-          <div className="rounded-[20px] border border-[#E6D2BD] bg-[#FFFDF9] p-3.5">
-            <div className="flex items-center justify-between gap-4">
+          <div className="rounded-[20px] border border-[#E6D2BD] bg-[#FFFDF9] p-3">
+            <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-extrabold uppercase tracking-wide text-[#7C6D64]">
+                <p className="text-xs font-extrabold uppercase tracking-wide text-[#7C6D64]">
                   Total
                 </p>
-                <p className="text-sm font-semibold text-[#A8988D]">
+                <p className="text-xs font-semibold text-[#A8988D]">
                   {cartItemCount} item{cartItemCount === 1 ? "" : "s"}
                 </p>
               </div>
 
-              <p className="text-3xl font-extrabold text-[#1F1712]">
+              <p className="text-2xl font-extrabold text-[#1F1712]">
                 {formatPeso(total)}
               </p>
             </div>
@@ -842,16 +860,16 @@ function CartPanel({
             type="button"
             onClick={onCheckout}
             disabled={cart.length === 0 || isSubmitting}
-            className="flex min-h-[58px] w-full items-center justify-center gap-3 rounded-2xl bg-[#FF6B0A] px-5 py-3.5 text-lg font-extrabold text-white shadow-lg shadow-[#FF6B0A]/20 transition-all hover:bg-[#E85F08] active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-[#D8C8B8] disabled:text-white/70 disabled:shadow-none focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/25"
+            className="flex min-h-[56px] w-full items-center justify-center gap-3 rounded-2xl bg-[#FF6B0A] px-5 py-3.5 text-base font-extrabold text-white shadow-lg shadow-[#FF6B0A]/20 transition-all hover:bg-[#E85F08] active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-[#D8C8B8] disabled:text-white/70 disabled:shadow-none focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/25"
           >
             {isSubmitting ? (
               <>
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 Recording...
               </>
             ) : (
               <>
-                <Receipt size={24} />
+                <Receipt size={22} />
                 Record Sale
               </>
             )}
@@ -876,9 +894,9 @@ function CartItemCard({
   onRemove: () => void;
 }) {
   return (
-    <div className="rounded-[20px] border border-[#E6D2BD] bg-[#FFFDF9] p-3">
-      <div className="flex gap-3">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[#E6D2BD] bg-[#FFF8F1]">
+    <div className="rounded-[18px] border border-[#E6D2BD] bg-[#FFFDF9] p-2.5">
+      <div className="flex gap-2.5">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#E6D2BD] bg-[#FFF8F1]">
           {item.product.image_url ? (
             <img
               src={item.product.image_url}
@@ -886,16 +904,16 @@ function CartItemCard({
               className="h-full w-full object-cover"
             />
           ) : (
-            <Package size={24} className="text-[#FF6B0A]/25" />
+            <Package size={21} className="text-[#FF6B0A]/25" />
           )}
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="whitespace-normal break-words text-base font-extrabold leading-snug text-[#1F1712]">
+          <p className="break-words text-sm font-extrabold leading-snug text-[#1F1712]">
             {item.product.name}
           </p>
 
-          <p className="mt-1 text-sm font-bold text-[#7C6D64]">
+          <p className="mt-0.5 text-xs font-bold text-[#7C6D64]">
             {formatPeso(item.product.price)} each
           </p>
         </div>
@@ -904,39 +922,39 @@ function CartItemCard({
           type="button"
           onClick={onRemove}
           aria-label={`Remove ${item.product.name}`}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-red-50 text-red-600 transition hover:bg-red-100"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600 transition hover:bg-red-100"
         >
-          <Trash2 size={18} />
+          <Trash2 size={16} />
         </button>
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <div className="flex items-center rounded-2xl border border-[#E6D2BD] bg-[#FFF8F1] p-1">
+      <div className="mt-2.5 flex items-center justify-between gap-2">
+        <div className="flex items-center rounded-xl border border-[#E6D2BD] bg-[#FFF8F1] p-1">
           <button
             type="button"
             onClick={onMinus}
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FFFDF9] text-[#6F625A] transition hover:bg-[#FFF0DE] hover:text-[#FF6B0A]"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FFFDF9] text-[#6F625A] transition hover:bg-[#FFF0DE] hover:text-[#FF6B0A]"
           >
-            <Minus size={18} />
+            <Minus size={16} />
           </button>
 
-          <span className="w-12 text-center text-lg font-extrabold text-[#1F1712]">
+          <span className="w-9 text-center text-base font-extrabold text-[#1F1712]">
             {item.quantity}
           </span>
 
           <button
             type="button"
             onClick={onPlus}
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FFFDF9] text-[#6F625A] transition hover:bg-[#FFF0DE] hover:text-[#FF6B0A]"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FFFDF9] text-[#6F625A] transition hover:bg-[#FFF0DE] hover:text-[#FF6B0A]"
           >
-            <Plus size={18} />
+            <Plus size={16} />
           </button>
         </div>
 
         <div className="text-right">
-          <p className="text-sm font-bold text-[#7C6D64]">Subtotal</p>
+          <p className="text-xs font-bold text-[#7C6D64]">Subtotal</p>
 
-          <p className="text-lg font-extrabold text-[#FF6B0A]">
+          <p className="text-base font-extrabold text-[#FF6B0A]">
             {formatPeso(item.subtotal)}
           </p>
         </div>
