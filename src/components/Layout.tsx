@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -7,6 +8,10 @@ import {
   BarChart3,
   LogOut,
   Store,
+  Menu,
+  X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
@@ -23,88 +28,309 @@ export default function Layout() {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
 
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("sidebar-collapsed");
+
+    if (saved === "true") {
+      setSidebarCollapsed(true);
+    }
+  }, []);
+
+  const toggleSidebarCollapse = () => {
+    setSidebarCollapsed((current) => {
+      const next = !current;
+      localStorage.setItem("sidebar-collapsed", String(next));
+      return next;
+    });
+  };
+
   const handleSignOut = async () => {
     await signOut();
     toast.success("Signed out successfully");
     navigate("/login");
   };
 
+  const userInitial = profile?.full_name?.charAt(0).toUpperCase() ?? "U";
+
   return (
-    // Main background changed to the Cream color from the image
-    <div className="flex h-screen bg-[#FDFBF9] overflow-hidden">
-      
-      {/* Sidebar - Changed to Dark Charcoal (#33302E) */}
-      <aside className="w-72 bg-[#33302E] flex flex-col shrink-0 shadow-xl">
-        
-        {/* Logo Section */}
-        <div className="flex items-center gap-4 px-6 py-8 border-b border-white/5">
-          {/* Icon background changed to the vibrant Orange */}
-          <div className="w-12 h-12 bg-[#FF8C42] rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-orange-900/20">
-            <Store size={26} className="text-white" />
+    <div className="flex h-screen overflow-hidden bg-[#F6F0EA] text-[#1F1712]">
+      {/* Mobile / Small Tablet Top Bar */}
+      <header className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-[#E6D2BD] bg-[#FFF8F1] px-4 shadow-sm md:hidden">
+        <button
+          type="button"
+          onClick={() => setMobileSidebarOpen(true)}
+          aria-label="Open menu"
+          className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FF6B0A] text-white shadow-sm transition hover:bg-[#E85F08] focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/25"
+        >
+          <Menu size={26} />
+        </button>
+
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FF6B0A] text-white">
+            <Store size={21} />
           </div>
-          <div className="overflow-hidden">
-            <p className="text-white font-bold text-lg leading-tight whitespace-nowrap">
+
+          <div className="leading-tight">
+            <p className="text-sm font-extrabold text-[#1F1712]">
               Jonel General
             </p>
-            <p className="text-white/50 text-sm">Merchandise</p>
+            <p className="text-xs font-semibold text-[#7C6D64]">Merchandise</p>
           </div>
         </div>
 
-        {/* Navigation - Increased text size and spacing for readability */}
-        <nav className="flex-1 px-4 py-8 flex flex-col gap-2">
+        <div className="h-12 w-12" />
+      </header>
+
+      {/* Mobile Overlay */}
+      {mobileSidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close menu overlay"
+          onClick={() => setMobileSidebarOpen(false)}
+          className="fixed inset-0 z-40 bg-black/45 md:hidden"
+        />
+      )}
+
+      {/* Desktop / Tablet Sidebar */}
+      <aside
+        className={`hidden shrink-0 border-r border-[#51443C] bg-[#3B312A] transition-all duration-300 md:flex md:flex-col ${
+          sidebarCollapsed ? "md:w-[88px]" : "md:w-[292px]"
+        }`}
+      >
+        {/* Logo / Header */}
+        <div
+          className={`flex min-h-[112px] items-center border-b border-white/10 px-4 ${
+            sidebarCollapsed ? "justify-center" : "justify-between gap-3"
+          }`}
+        >
+          <div
+            className={`flex min-w-0 items-center ${
+              sidebarCollapsed ? "justify-center" : "gap-4"
+            }`}
+          >
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#FF6B0A] text-white shadow-sm">
+              <Store size={24} />
+            </div>
+
+            {!sidebarCollapsed && (
+              <div className="min-w-0">
+                <p className="text-lg font-extrabold leading-tight text-white">
+                  Jonel General
+                </p>
+                <p className="text-base font-bold leading-tight text-white">
+                  Merchandise
+                </p>
+                <p className="mt-1 text-sm font-semibold text-white/45">
+                  Watch & Merchandise
+                </p>
+              </div>
+            )}
+          </div>
+
+          {!sidebarCollapsed && (
+            <button
+              type="button"
+              onClick={toggleSidebarCollapse}
+              aria-label="Collapse sidebar"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white/65 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/25"
+            >
+              <ChevronLeft size={23} />
+            </button>
+          )}
+        </div>
+
+        {/* Collapse Button for Icon Mode */}
+        {sidebarCollapsed && (
+          <div className="border-b border-white/10 px-4 py-3">
+            <button
+              type="button"
+              onClick={toggleSidebarCollapse}
+              aria-label="Expand sidebar"
+              className="flex h-12 w-full items-center justify-center rounded-2xl bg-white/5 text-white/70 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/25"
+            >
+              <ChevronRight size={24} />
+            </button>
+          </div>
+        )}
+
+        {/* Navigation */}
+        <nav
+          className={`flex flex-1 flex-col gap-2 overflow-y-auto py-5 ${
+            sidebarCollapsed ? "px-3" : "px-4"
+          }`}
+        >
           {navItems.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
               end={to === "/"}
+              title={sidebarCollapsed ? label : undefined}
               className={({ isActive }) =>
-                `flex items-center gap-4 px-5 py-4 rounded-2xl text-lg font-medium transition-all duration-200
-                ${
+                `group relative flex min-h-[56px] items-center rounded-2xl text-base font-extrabold transition-all duration-150 focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/25 ${
+                  sidebarCollapsed ? "justify-center px-0" : "gap-4 px-4 py-3.5"
+                } ${
                   isActive
-                    ? "bg-[#FF8C42] text-white shadow-lg shadow-orange-900/30"
-                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                    ? "bg-[#FF6B0A] text-white shadow-lg shadow-[#FF6B0A]/25"
+                    : "text-white/55 hover:bg-white/10 hover:text-white"
                 }`
               }
             >
-              <Icon size={24} />
-              {label}
+              <Icon size={23} className="shrink-0" />
+
+              {!sidebarCollapsed && <span>{label}</span>}
+
+              {sidebarCollapsed && (
+                <span className="pointer-events-none absolute left-[72px] z-50 hidden whitespace-nowrap rounded-xl bg-[#1F1712] px-3 py-2 text-sm font-bold text-white shadow-lg group-hover:block">
+                  {label}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>
 
-        {/* User Profile + Sign Out Section */}
-        <div className="px-4 py-6 border-t border-white/5">
-          {/* User Info Card */}
-          <div className="flex items-center gap-3 px-4 py-4 mb-4 bg-white/5 rounded-2xl">
-            <div className="w-10 h-10 rounded-full bg-[#FF8C42]/20 flex items-center justify-center shrink-0 border border-[#FF8C42]/30">
-              <span className="text-[#FF8C42] font-bold text-lg">
-                {profile?.full_name?.charAt(0).toUpperCase() ?? "U"}
+        {/* User + Sign Out */}
+        <div
+          className={`border-t border-white/10 py-5 ${
+            sidebarCollapsed ? "px-3" : "px-4"
+          }`}
+        >
+          <div
+            className={`mb-3 flex items-center rounded-2xl ${
+              sidebarCollapsed ? "justify-center px-0 py-2" : "gap-3 px-3 py-3"
+            }`}
+          >
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#8B572A]">
+              <span className="text-lg font-extrabold text-[#FF8A2A]">
+                {userInitial}
               </span>
             </div>
-            <div className="overflow-hidden">
-              <p className="text-white text-base font-semibold truncate">
+
+            {!sidebarCollapsed && (
+              <div className="min-w-0">
+                <p className="truncate text-base font-extrabold text-white">
+                  {profile?.full_name ?? "User"}
+                </p>
+                <p className="truncate text-sm font-semibold capitalize text-white/45">
+                  {profile?.role ?? "staff"}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSignOut}
+            title={sidebarCollapsed ? "Sign Out" : undefined}
+            className={`group relative flex min-h-[52px] w-full items-center rounded-2xl text-base font-extrabold text-white/55 transition-all hover:bg-red-500/10 hover:text-red-400 focus:outline-none focus:ring-4 focus:ring-red-500/20 ${
+              sidebarCollapsed ? "justify-center px-0" : "gap-3 px-4 py-3"
+            }`}
+          >
+            <LogOut size={21} className="shrink-0" />
+
+            {!sidebarCollapsed && <span>Sign Out</span>}
+
+            {sidebarCollapsed && (
+              <span className="pointer-events-none absolute left-[72px] z-50 hidden whitespace-nowrap rounded-xl bg-[#1F1712] px-3 py-2 text-sm font-bold text-white shadow-lg group-hover:block">
+                Sign Out
+              </span>
+            )}
+          </button>
+        </div>
+      </aside>
+
+      {/* Mobile Sidebar Drawer */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-[292px] shrink-0 flex-col overflow-hidden border-r border-[#51443C] bg-[#3B312A] shadow-2xl transition-transform duration-300 md:hidden ${
+          mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {/* Mobile Logo */}
+        <div className="flex items-start justify-between gap-3 border-b border-white/10 px-5 py-6">
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#FF6B0A] text-white shadow-sm">
+              <Store size={24} />
+            </div>
+
+            <div className="min-w-0">
+              <p className="text-lg font-extrabold leading-tight text-white">
+                Jonel General
+              </p>
+              <p className="text-base font-bold leading-tight text-white">
+                Merchandise
+              </p>
+              <p className="mt-1 text-sm font-semibold text-white/45">
+                Watch & Merchandise
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setMobileSidebarOpen(false)}
+            aria-label="Close menu"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white/70 transition hover:bg-white/10 hover:text-white"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        {/* Mobile Navigation */}
+        <nav className="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-5">
+          {navItems.map(({ to, icon: Icon, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === "/"}
+              onClick={() => setMobileSidebarOpen(false)}
+              className={({ isActive }) =>
+                `flex min-h-[56px] items-center gap-4 rounded-2xl px-4 py-3.5 text-base font-extrabold transition-all duration-150 focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/25 ${
+                  isActive
+                    ? "bg-[#FF6B0A] text-white shadow-lg shadow-[#FF6B0A]/25"
+                    : "text-white/55 hover:bg-white/10 hover:text-white"
+                }`
+              }
+            >
+              <Icon size={23} className="shrink-0" />
+              <span>{label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* Mobile User + Sign Out */}
+        <div className="border-t border-white/10 px-4 py-5">
+          <div className="mb-3 flex items-center gap-3 rounded-2xl px-3 py-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#8B572A]">
+              <span className="text-lg font-extrabold text-[#FF8A2A]">
+                {userInitial}
+              </span>
+            </div>
+
+            <div className="min-w-0">
+              <p className="truncate text-base font-extrabold text-white">
                 {profile?.full_name ?? "User"}
               </p>
-              <p className="text-white/40 text-xs capitalize">
+              <p className="truncate text-sm font-semibold capitalize text-white/45">
                 {profile?.role ?? "staff"}
               </p>
             </div>
           </div>
 
-          {/* Sign Out Button - Made more distinct but elegant */}
           <button
+            type="button"
             onClick={handleSignOut}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/50 hover:bg-red-500/10 hover:text-red-400 transition-all text-base font-medium"
+            className="flex min-h-[52px] w-full items-center gap-3 rounded-2xl px-4 py-3 text-base font-extrabold text-white/55 transition-all hover:bg-red-500/10 hover:text-red-400 focus:outline-none focus:ring-4 focus:ring-red-500/20"
           >
-            <LogOut size={20} />
+            <LogOut size={21} className="shrink-0" />
             Sign Out
           </button>
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto">
-        {/* The Outlet will render the Dashboard (which we already styled) */}
+      {/* Main Content */}
+      <main className="min-w-0 flex-1 overflow-y-auto bg-[#F6F0EA] pt-16 md:pt-0">
         <Outlet />
       </main>
     </div>
