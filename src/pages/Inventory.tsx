@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type ReactNode,
-} from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { toast } from "sonner";
 import {
@@ -17,9 +10,6 @@ import {
   Camera,
   X,
   Save,
-  Upload,
-  RotateCcw,
-  AlertTriangle,
 } from "lucide-react";
 import type { Product } from "../types";
 
@@ -32,15 +22,11 @@ export default function Inventory() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [isLoading, setIsLoading] = useState(true);
-
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [facingMode, setFacingMode] = useState<"environment" | "user">(
-    "environment",
-  );
-
+  // Form state
   const [form, setForm] = useState({
     name: "",
     category: "Watches",
@@ -49,167 +35,38 @@ export default function Inventory() {
     stock_quantity: "",
     image_url: "",
   });
-
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [showCameraModal, setShowCameraModal] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-
-  const totalLowStock = products.filter(
-    (product) => product.stock_quantity < LOW_STOCK_THRESHOLD,
-  ).length;
-
-  const totalOutOfStock = products.filter(
-    (product) => product.stock_quantity === 0,
-  ).length;
-
-  const formatPeso = (value: number) => {
-    return `₱${value.toLocaleString("en-PH", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
-  };
-
-  const stopCameraStream = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-  };
-
-  const fetchProducts = useCallback(async () => {
-    setIsLoading(true);
-
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .or("is_deleted.eq.false,is_deleted.is.null")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      toast.error("Failed to load inventory.");
-      setIsLoading(false);
-      return;
-    }
-
-    setProducts(data ?? []);
-    setIsLoading(false);
-  }, []);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    void fetchProducts();
-  }, [fetchProducts]);
+    fetchProducts();
+  }, []);
 
   useEffect(() => {
     let result = products;
-
-    if (search.trim()) {
-      const keyword = search.toLowerCase().trim();
-
-      result = result.filter((product) =>
-        product.name.toLowerCase().includes(keyword),
+    if (search)
+      result = result.filter((p) =>
+        p.name.toLowerCase().includes(search.toLowerCase()),
       );
-    }
-
-    if (selectedCategory !== "All") {
-      result = result.filter(
-        (product) => product.category === selectedCategory,
-      );
-    }
-
+    if (selectedCategory !== "All")
+      result = result.filter((p) => p.category === selectedCategory);
     setFiltered(result);
   }, [search, selectedCategory, products]);
 
-  useEffect(() => {
-    return () => {
-      stopCameraStream();
-    };
-  }, []);
-
-  const openCamera = async (facing: "environment" | "user" = "environment") => {
-    try {
-      if (!navigator.mediaDevices?.getUserMedia) {
-        toast.error("Camera is not supported on this device.");
-        return;
-      }
-
-      stopCameraStream();
-
-      let stream: MediaStream;
-
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { exact: facing } },
-        });
-      } catch {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: facing },
-        });
-      }
-
-      streamRef.current = stream;
-      setFacingMode(facing);
-      setShowCameraModal(true);
-
-      setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play().catch(() => {});
-        }
-      }, 150);
-    } catch {
-      toast.error("Camera not available. Please use Upload Photo instead.");
-    }
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    const { data } = await supabase
+      .from("products")
+      .select("*")
+      .order("created_at", { ascending: false });
+    setProducts(data ?? []);
+    setIsLoading(false);
   };
 
-  const switchCamera = () => {
-    const newFacing = facingMode === "environment" ? "user" : "environment";
-    void openCamera(newFacing);
-  };
-
-  const closeCamera = () => {
-    stopCameraStream();
-    setShowCameraModal(false);
-    setFacingMode("environment");
-  };
-
-  const capturePhoto = () => {
-    if (!videoRef.current || !canvasRef.current) return;
-
-    const canvas = canvasRef.current;
-    const video = videoRef.current;
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    canvas.getContext("2d")?.drawImage(video, 0, 0);
-
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) return;
-
-        const file = new File([blob], `photo-${Date.now()}.jpg`, {
-          type: "image/jpeg",
-        });
-
-        setImageFile(file);
-        setImagePreview(URL.createObjectURL(blob));
-        closeCamera();
-      },
-      "image/jpeg",
-      0.9,
-    );
-  };
-
-  const resetForm = () => {
+  const openAdd = () => {
+    setEditingProduct(null);
     setForm({
       name: "",
       category: "Watches",
@@ -218,20 +75,13 @@ export default function Inventory() {
       stock_quantity: "",
       image_url: "",
     });
-
     setImageFile(null);
     setImagePreview(null);
-  };
-
-  const openAdd = () => {
-    setEditingProduct(null);
-    resetForm();
     setShowModal(true);
   };
 
   const openEdit = (product: Product) => {
     setEditingProduct(product);
-
     setForm({
       name: product.name,
       category: product.category,
@@ -240,110 +90,47 @@ export default function Inventory() {
       stock_quantity: product.stock_quantity.toString(),
       image_url: product.image_url ?? "",
     });
-
     setImageFile(null);
     setImagePreview(product.image_url);
     setShowModal(true);
   };
 
-  const closeProductModal = () => {
-    closeCamera();
-    setShowModal(false);
-    setIsSubmitting(false);
-  };
-
-  const handleImageSelect = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select a valid image file.");
-      return;
-    }
-
-    const maxSize = 5 * 1024 * 1024;
-
-    if (file.size > maxSize) {
-      toast.error("Image is too large. Please choose an image below 5MB.");
-      return;
-    }
-
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
-
-    event.target.value = "";
-  };
-
-  const removeSelectedImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    setForm((current) => ({ ...current, image_url: "" }));
   };
 
   const uploadImage = async (file: File): Promise<string> => {
-    const ext = file.name.split(".").pop() || "jpg";
-    const random = Math.random().toString(36).slice(2);
-    const fileName = `products/${Date.now()}-${random}.${ext}`;
-
+    const ext = file.name.split(".").pop();
+    const fileName = `${Date.now()}.${ext}`;
     const { error } = await supabase.storage
       .from("product-images")
       .upload(fileName, file);
-
     if (error) throw error;
-
     const { data } = supabase.storage
       .from("product-images")
       .getPublicUrl(fileName);
-
     return data.publicUrl;
   };
 
   const handleSubmit = async () => {
-    const name = form.name.trim();
-    const price = Number(form.price);
-    const costPrice = form.cost_price ? Number(form.cost_price) : null;
-    const stockQuantity = Number(form.stock_quantity);
-
-    if (!name || !form.price || !form.stock_quantity) {
-      toast.error("Please fill in all required fields.");
+    if (!form.name || !form.price || !form.stock_quantity) {
+      toast.error("Please fill in all required fields");
       return;
     }
-
-    if (Number.isNaN(price) || price < 0) {
-      toast.error("Please enter a valid selling price.");
-      return;
-    }
-
-    if (costPrice !== null && (Number.isNaN(costPrice) || costPrice < 0)) {
-      toast.error("Please enter a valid cost price.");
-      return;
-    }
-
-    if (
-      Number.isNaN(stockQuantity) ||
-      stockQuantity < 0 ||
-      !Number.isInteger(stockQuantity)
-    ) {
-      toast.error("Stock quantity must be a whole number.");
-      return;
-    }
-
     setIsSubmitting(true);
-
     try {
       let imageUrl = form.image_url;
-
-      if (imageFile) {
-        imageUrl = await uploadImage(imageFile);
-      }
+      if (imageFile) imageUrl = await uploadImage(imageFile);
 
       const payload = {
-        name,
+        name: form.name,
         category: form.category,
-        price,
-        cost_price: costPrice,
-        stock_quantity: stockQuantity,
+        price: parseFloat(form.price),
+        cost_price: form.cost_price ? parseFloat(form.cost_price) : null,
+        stock_quantity: parseInt(form.stock_quantity),
         image_url: imageUrl || null,
       };
 
@@ -352,21 +139,16 @@ export default function Inventory() {
           .from("products")
           .update(payload)
           .eq("id", editingProduct.id);
-
         if (error) throw error;
-
-        toast.success("Product updated successfully!");
+        toast.success("Product updated!");
       } else {
         const { error } = await supabase.from("products").insert(payload);
-
         if (error) throw error;
-
-        toast.success("Product added successfully!");
+        toast.success("Product added!");
       }
-
-      closeProductModal();
-      void fetchProducts();
-    } catch {
+      setShowModal(false);
+      fetchProducts();
+    } catch (err) {
       toast.error("Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -374,547 +156,280 @@ export default function Inventory() {
   };
 
   const handleDelete = async (product: Product) => {
-    const confirmed = confirm(
-      `Delete "${product.name}"?\n\nIt will be hidden from inventory but kept in sales history.`,
-    );
-
-    if (!confirmed) return;
-
+    if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
     const { error } = await supabase
       .from("products")
-      .update({ is_deleted: true })
+      .delete()
       .eq("id", product.id);
-
     if (error) {
-      toast.error("Failed to delete product.");
+      toast.error("Failed to delete product");
       return;
     }
-
-    toast.success("Product removed from inventory.");
-    void fetchProducts();
+    toast.success("Product deleted");
+    fetchProducts();
   };
 
   return (
-    <main className="h-full overflow-hidden bg-[#F6F0EA] p-3 text-[#1F1712] sm:p-4 lg:p-5">
-      <div className="mx-auto grid h-full max-w-[1600px] grid-rows-[auto_auto_auto_minmax(0,1fr)] gap-4">
-        {/* Header */}
-        <section className="rounded-[22px] border border-[#E6D2BD] bg-[#F8F2EC] p-4 shadow-sm sm:p-5">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="text-2xl font-extrabold tracking-tight text-[#1F1712] sm:text-3xl">
-                Inventory
-              </h1>
+    <div className="p-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-[#0F172A]">Inventory</h1>
+          <p className="text-[#64748B] mt-1">
+            {products.length} products total
+          </p>
+        </div>
+        <button
+          onClick={openAdd}
+          className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold px-6 py-3.5 rounded-xl transition-all shadow-lg shadow-blue-500/20 text-base active:scale-95"
+        >
+          <Plus size={20} /> Add Product
+        </button>
+      </div>
 
-              <p className="mt-1 text-sm font-semibold text-[#6F625A] sm:text-base">
-                Manage products, prices, photos, and stock levels.
-              </p>
-            </div>
-
+      {/* Search + Filter */}
+      <div className="flex gap-4 mb-6">
+        <div className="relative flex-1">
+          <Search
+            size={18}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748B]"
+          />
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-11 pr-4 py-3.5 bg-white border-2 border-gray-200 rounded-xl text-base focus:outline-none focus:border-blue-500 transition-colors"
+          />
+        </div>
+        <div className="flex gap-2">
+          {["All", ...CATEGORIES].map((cat) => (
             <button
-              type="button"
-              onClick={openAdd}
-              className="inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-2xl bg-[#FF6B0A] px-5 py-3 text-base font-extrabold text-white shadow-lg shadow-[#FF6B0A]/20 transition-all hover:bg-[#E85F08] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/25 sm:w-auto"
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-5 py-3.5 rounded-xl text-sm font-medium transition-all ${
+                selectedCategory === cat
+                  ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20"
+                  : "bg-white border-2 border-gray-200 text-[#64748B] hover:border-blue-500 hover:text-blue-500"
+              }`}
             >
-              <Plus size={21} />
-              Add Product
+              {cat}
             </button>
-          </div>
-        </section>
+          ))}
+        </div>
+      </div>
 
-        {/* Summary Cards */}
-        <section className="grid grid-cols-3 gap-3">
-          <InventorySummaryCard
-            label="Products"
-            value={products.length.toString()}
-            icon={<Package size={21} />}
-          />
+      {/* Product Grid */}
+      {isLoading ? (
+        <div className="flex justify-center py-20">
+          <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-24 text-[#64748B]">
+          <Package size={56} className="mb-4 opacity-20" />
+          <p className="text-xl font-medium">No products found</p>
+          <p className="text-sm mt-1">Add your first product to get started</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-4 gap-5">
+          {filtered.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onEdit={() => openEdit(product)}
+              onDelete={() => handleDelete(product)}
+            />
+          ))}
+        </div>
+      )}
 
-          <InventorySummaryCard
-            label="Low Stock"
-            value={totalLowStock.toString()}
-            icon={<AlertTriangle size={21} />}
-            warning={totalLowStock > 0}
-          />
-
-          <InventorySummaryCard
-            label="Out"
-            value={totalOutOfStock.toString()}
-            icon={<AlertTriangle size={21} />}
-            danger={totalOutOfStock > 0}
-          />
-        </section>
-
-        {/* Search + Filter */}
-        <section className="rounded-[22px] border border-[#E6D2BD] bg-[#FFF8F1] p-3 shadow-sm sm:p-4">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-            <div className="relative flex-1">
-              <Search
-                size={20}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7C6D64]"
-              />
-
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                className="min-h-[50px] w-full rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] py-3 pl-11 pr-12 text-base font-semibold text-[#1F1712] outline-none transition focus:border-[#FF6B0A] focus:ring-4 focus:ring-[#FF6B0A]/15"
-              />
-
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch("")}
-                  aria-label="Clear search"
-                  className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-[#7C6D64] transition hover:bg-[#FFF0DE] hover:text-[#FF6B0A]"
-                >
-                  <X size={18} />
-                </button>
-              )}
-            </div>
-
-            <div className="flex gap-2 overflow-x-auto pb-1 xl:flex-wrap xl:overflow-visible xl:pb-0">
-              {["All", ...CATEGORIES].map((category) => (
-                <button
-                  key={category}
-                  type="button"
-                  onClick={() => setSelectedCategory(category)}
-                  className={`min-h-[46px] shrink-0 rounded-2xl px-4 py-2.5 text-sm font-extrabold transition-all focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20 ${
-                    selectedCategory === category
-                      ? "bg-[#FF6B0A] text-white shadow-lg shadow-[#FF6B0A]/20"
-                      : "border border-[#E6D2BD] bg-[#FFFDF9] text-[#6F625A] hover:border-[#FF6B0A] hover:text-[#FF6B0A]"
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Product Grid - only this area scrolls */}
-        <section className="min-h-0 overflow-y-auto pr-1">
-          {isLoading ? (
-            <div className="flex min-h-[280px] items-center justify-center rounded-[22px] border border-[#E6D2BD] bg-[#FFF8F1]">
-              <div className="relative flex w-full max-w-xs flex-col items-center overflow-hidden rounded-[24px] border border-[#E6D2BD] bg-[#FFF8F1] px-7 py-7 text-center shadow-sm">
-                <div className="absolute inset-x-0 top-0 h-1.5 bg-[#FF6B0A]" />
-
-                <div className="relative mb-2 flex h-16 w-16 items-center justify-center">
-                  <div className="absolute h-16 w-16 animate-spin rounded-full border-4 border-[#FFE3C8] border-t-[#FF6B0A]" />
-
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FFF0DE]">
-                    <Package size={25} className="text-[#FF6B0A]" />
-                  </div>
-                </div>
-
-                <p className="text-lg font-extrabold text-[#1F1712]">
-                  Loading inventory
-                </p>
-
-                <p className="mt-1 text-sm font-semibold text-[#7C6D64]">
-                  Please wait...
-                </p>
-              </div>
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="flex min-h-[280px] flex-col items-center justify-center rounded-[22px] border border-dashed border-[#E6D2BD] bg-[#FFF8F1] px-5 text-center">
-              <Package size={54} className="mb-4 text-[#FF6B0A]/35" />
-
-              <p className="text-2xl font-extrabold text-[#1F1712]">
-                No products found
-              </p>
-
-              <p className="mt-2 max-w-md text-base font-medium text-[#6F625A]">
-                Try changing your search or category filter. You can also add a
-                new product to your inventory.
-              </p>
-
+      {/* Add/Edit Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h2 className="text-xl font-bold text-[#0F172A]">
+                {editingProduct ? "Edit Product" : "Add New Product"}
+              </h2>
               <button
-                type="button"
-                onClick={openAdd}
-                className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-[#FF6B0A] px-6 py-3 text-base font-extrabold text-white transition hover:bg-[#E85F08]"
+                onClick={() => setShowModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
               >
-                <Plus size={20} />
-                Add Product
+                <X size={20} />
               </button>
             </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-3 pb-2 sm:grid-cols-3 lg:grid-cols-5">
-              {filtered.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  formatPeso={formatPeso}
-                  onEdit={() => openEdit(product)}
-                  onDelete={() => handleDelete(product)}
-                />
-              ))}
-            </div>
-          )}
-        </section>
 
-        {/* Add/Edit Modal */}
-        {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1F1712]/60 p-3 backdrop-blur-sm sm:p-4">
-            <div className="flex max-h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-[28px] border border-[#E6D2BD] bg-[#FFF8F1] shadow-2xl">
-              {/* Modal Header */}
-              <div className="flex items-center justify-between border-b border-[#E6D2BD] px-5 py-4 sm:px-6">
-                <div>
-                  <h2 className="text-2xl font-extrabold text-[#1F1712]">
-                    {editingProduct ? "Edit Product" : "Add New Product"}
-                  </h2>
-
-                  <p className="mt-1 text-sm font-semibold text-[#7C6D64]">
-                    Fields marked with * are required.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={closeProductModal}
-                  aria-label="Close product modal"
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-[#6F625A] transition hover:bg-[#FFF0DE] hover:text-[#FF6B0A] focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20"
+            <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+              {/* Image Upload */}
+              <div className="flex flex-col items-center gap-3">
+                <div
+                  className="w-32 h-32 rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 cursor-pointer"
+                  onClick={() => fileInputRef.current?.click()}
                 >
-                  <X size={24} />
-                </button>
+                  {imagePreview ? (
+                    <img
+                      src={imagePreview}
+                      alt="preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Package size={40} className="text-gray-300" />
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-medium transition-colors"
+                  >
+                    <Package size={16} /> Upload Photo
+                  </button>
+                  <button
+                    onClick={() => cameraInputRef.current?.click()}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 rounded-xl text-sm font-medium text-blue-600 transition-colors"
+                  >
+                    <Camera size={16} /> Take Photo
+                  </button>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageSelect}
+                />
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handleImageSelect}
+                />
               </div>
 
-              <div className="space-y-6 overflow-y-auto p-5 sm:p-6">
-                {/* Image Upload */}
-                <section>
-                  <label className="mb-3 block text-base font-extrabold text-[#1F1712]">
-                    Product Photo
-                  </label>
+              {/* Product Name */}
+              <div>
+                <label className="block text-sm font-semibold text-[#0F172A] mb-2">
+                  Product Name *
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Casio G-Shock GA-100"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl text-base focus:outline-none focus:border-blue-500 transition-colors"
+                />
+              </div>
 
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              {/* Category */}
+              <div>
+                <label className="block text-sm font-semibold text-[#0F172A] mb-2">
+                  Category
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {CATEGORIES.map((cat) => (
                     <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="relative flex h-40 w-full items-center justify-center overflow-hidden rounded-[24px] border-2 border-dashed border-[#E6D2BD] bg-[#FFFDF9] transition hover:border-[#FF6B0A] sm:h-36 sm:w-36 sm:shrink-0"
+                      key={cat}
+                      onClick={() => setForm({ ...form, category: cat })}
+                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                        form.category === cat
+                          ? "bg-blue-500 text-white"
+                          : "bg-gray-100 text-[#64748B] hover:bg-gray-200"
+                      }`}
                     >
-                      {imagePreview ? (
-                        <img
-                          src={imagePreview}
-                          alt="Product preview"
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex flex-col items-center gap-2 px-4 text-center">
-                          <Package size={40} className="text-[#FF6B0A]/35" />
-                          <span className="text-sm font-bold text-[#7C6D64]">
-                            Tap to add photo
-                          </span>
-                        </div>
-                      )}
+                      {cat}
                     </button>
+                  ))}
+                </div>
+              </div>
 
-                    <div className="flex flex-1 flex-col gap-3">
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] px-4 py-3 text-base font-extrabold text-[#6F625A] transition hover:border-[#FF6B0A] hover:text-[#FF6B0A] focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20"
-                        >
-                          <Upload size={20} />
-                          Upload Photo
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => openCamera("environment")}
-                          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-[#FFF0DE] px-4 py-3 text-base font-extrabold text-[#FF6B0A] transition hover:bg-[#FFE3C8] focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20"
-                        >
-                          <Camera size={20} />
-                          Take Photo
-                        </button>
-                      </div>
-
-                      {imagePreview && (
-                        <button
-                          type="button"
-                          onClick={removeSelectedImage}
-                          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-2.5 text-base font-extrabold text-red-600 transition hover:bg-red-100"
-                        >
-                          <Trash2 size={18} />
-                          Remove Photo
-                        </button>
-                      )}
-
-                      <p className="text-sm font-medium text-[#7C6D64]">
-                        Recommended: clear photo, under 5MB.
-                      </p>
-                    </div>
-
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleImageSelect}
-                    />
-                  </div>
-                </section>
-
-                {/* Product Name */}
-                <section>
-                  <label className="mb-2 block text-base font-extrabold text-[#1F1712]">
-                    Product Name *
+              {/* Price + Cost */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-[#0F172A] mb-2">
+                    Selling Price (₱) *
                   </label>
-
-                  <input
-                    type="text"
-                    placeholder="Example: Casio G-Shock GA-100"
-                    value={form.name}
-                    onChange={(event) =>
-                      setForm({ ...form, name: event.target.value })
-                    }
-                    className="min-h-14 w-full rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] px-4 py-3.5 text-base font-semibold text-[#1F1712] outline-none transition placeholder:text-[#A8988D] focus:border-[#FF6B0A] focus:ring-4 focus:ring-[#FF6B0A]/15"
-                  />
-                </section>
-
-                {/* Category */}
-                <section>
-                  <label className="mb-2 block text-base font-extrabold text-[#1F1712]">
-                    Category
-                  </label>
-
-                  <div className="flex flex-wrap gap-2">
-                    {CATEGORIES.map((category) => (
-                      <button
-                        key={category}
-                        type="button"
-                        onClick={() => setForm({ ...form, category: category })}
-                        className={`min-h-11 rounded-2xl px-4 py-2.5 text-base font-extrabold transition-all focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20 ${
-                          form.category === category
-                            ? "bg-[#FF6B0A] text-white shadow-md shadow-[#FF6B0A]/20"
-                            : "border border-[#E6D2BD] bg-[#FFFDF9] text-[#6F625A] hover:border-[#FF6B0A] hover:text-[#FF6B0A]"
-                        }`}
-                      >
-                        {category}
-                      </button>
-                    ))}
-                  </div>
-                </section>
-
-                {/* Price + Cost */}
-                <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="mb-2 block text-base font-extrabold text-[#1F1712]">
-                      Selling Price (₱) *
-                    </label>
-
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      inputMode="decimal"
-                      placeholder="0.00"
-                      value={form.price}
-                      onChange={(event) =>
-                        setForm({ ...form, price: event.target.value })
-                      }
-                      className="min-h-14 w-full rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] px-4 py-3.5 text-base font-semibold text-[#1F1712] outline-none transition placeholder:text-[#A8988D] focus:border-[#FF6B0A] focus:ring-4 focus:ring-[#FF6B0A]/15"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-base font-extrabold text-[#1F1712]">
-                      Cost Price (₱)
-                    </label>
-
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      inputMode="decimal"
-                      placeholder="0.00"
-                      value={form.cost_price}
-                      onChange={(event) =>
-                        setForm({ ...form, cost_price: event.target.value })
-                      }
-                      className="min-h-14 w-full rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] px-4 py-3.5 text-base font-semibold text-[#1F1712] outline-none transition placeholder:text-[#A8988D] focus:border-[#FF6B0A] focus:ring-4 focus:ring-[#FF6B0A]/15"
-                    />
-                  </div>
-                </section>
-
-                {/* Stock */}
-                <section>
-                  <label className="mb-2 block text-base font-extrabold text-[#1F1712]">
-                    Stock Quantity *
-                  </label>
-
                   <input
                     type="number"
-                    min="0"
-                    step="1"
-                    inputMode="numeric"
-                    placeholder="0"
-                    value={form.stock_quantity}
-                    onChange={(event) =>
-                      setForm({ ...form, stock_quantity: event.target.value })
+                    placeholder="0.00"
+                    value={form.price}
+                    onChange={(e) =>
+                      setForm({ ...form, price: e.target.value })
                     }
-                    className="min-h-14 w-full rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] px-4 py-3.5 text-base font-semibold text-[#1F1712] outline-none transition placeholder:text-[#A8988D] focus:border-[#FF6B0A] focus:ring-4 focus:ring-[#FF6B0A]/15"
+                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl text-base focus:outline-none focus:border-blue-500 transition-colors"
                   />
-                </section>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="grid grid-cols-1 gap-3 border-t border-[#E6D2BD] bg-[#FFF8F1] p-5 sm:grid-cols-2 sm:p-6">
-                <button
-                  type="button"
-                  onClick={closeProductModal}
-                  className="min-h-[52px] rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] px-5 py-3.5 text-base font-extrabold text-[#6F625A] transition hover:border-[#FF6B0A] hover:text-[#FF6B0A] focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-[#FF6B0A] px-5 py-3.5 text-base font-extrabold text-white transition hover:bg-[#E85F08] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/25"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save size={20} />
-                      {editingProduct ? "Save Changes" : "Add Product"}
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Camera Modal */}
-        {showCameraModal && (
-          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 p-3">
-            <div className="w-full max-w-2xl overflow-hidden rounded-[28px] bg-[#FFF8F1] shadow-2xl">
-              <div className="flex items-center justify-between border-b border-[#E6D2BD] px-5 py-4">
-                <div>
-                  <h3 className="text-xl font-extrabold text-[#1F1712]">
-                    Take Photo
-                  </h3>
-
-                  <p className="text-sm font-semibold text-[#7C6D64]">
-                    Position the product clearly inside the camera.
-                  </p>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={closeCamera}
-                  aria-label="Close camera"
-                  className="flex h-11 w-11 items-center justify-center rounded-2xl text-[#6F625A] transition hover:bg-[#FFF0DE] hover:text-[#FF6B0A]"
-                >
-                  <X size={24} />
-                </button>
+                <div>
+                  <label className="block text-sm font-semibold text-[#0F172A] mb-2">
+                    Cost Price (₱)
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="0.00"
+                    value={form.cost_price}
+                    onChange={(e) =>
+                      setForm({ ...form, cost_price: e.target.value })
+                    }
+                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl text-base focus:outline-none focus:border-blue-500 transition-colors"
+                  />
+                </div>
               </div>
 
-              <div className="bg-black">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="max-h-[65dvh] w-full object-contain"
+              {/* Stock */}
+              <div>
+                <label className="block text-sm font-semibold text-[#0F172A] mb-2">
+                  Stock Quantity *
+                </label>
+                <input
+                  type="number"
+                  placeholder="0"
+                  value={form.stock_quantity}
+                  onChange={(e) =>
+                    setForm({ ...form, stock_quantity: e.target.value })
+                  }
+                  className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl text-base focus:outline-none focus:border-blue-500 transition-colors"
                 />
-
-                <canvas ref={canvasRef} className="hidden" />
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-3">
-                <button
-                  type="button"
-                  onClick={closeCamera}
-                  className="min-h-[52px] rounded-2xl border border-[#E6D2BD] bg-[#FFFDF9] px-4 py-3 text-base font-extrabold text-[#6F625A] transition hover:border-[#FF6B0A] hover:text-[#FF6B0A]"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="button"
-                  onClick={switchCamera}
-                  className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-[#FFF0DE] px-4 py-3 text-base font-extrabold text-[#FF6B0A] transition hover:bg-[#FFE3C8]"
-                >
-                  <RotateCcw size={20} />
-                  Switch
-                </button>
-
-                <button
-                  type="button"
-                  onClick={capturePhoto}
-                  className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-[#FF6B0A] px-4 py-3 text-base font-extrabold text-white transition hover:bg-[#E85F08]"
-                >
-                  <Camera size={20} />
-                  Capture
-                </button>
               </div>
             </div>
+
+            {/* Modal Footer */}
+            <div className="flex gap-3 p-6 border-t border-gray-100">
+              <button
+                onClick={() => setShowModal(false)}
+                className="flex-1 py-3.5 border-2 border-gray-200 rounded-xl font-medium text-[#64748B] hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-bold rounded-xl transition-all"
+              >
+                {isSubmitting ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <Save size={18} />{" "}
+                    {editingProduct ? "Save Changes" : "Add Product"}
+                  </>
+                )}
+              </button>
+            </div>
           </div>
-        )}
-      </div>
-    </main>
-  );
-}
-
-function InventorySummaryCard({
-  label,
-  value,
-  icon,
-  warning = false,
-  danger = false,
-}: {
-  label: string;
-  value: string;
-  icon: ReactNode;
-  warning?: boolean;
-  danger?: boolean;
-}) {
-  return (
-    <div className="rounded-[20px] border border-[#E6D2BD] bg-[#FFF8F1] p-3 shadow-sm sm:p-4">
-      <div
-        className={`mb-2 flex h-10 w-10 items-center justify-center rounded-2xl ${
-          danger
-            ? "bg-red-50 text-red-600"
-            : warning
-              ? "bg-[#FFF0DE] text-[#FF6B0A]"
-              : "bg-[#FFF0DE] text-[#FF6B0A]"
-        }`}
-      >
-        {icon}
-      </div>
-
-      <p className="text-sm font-bold text-[#6F625A]">{label}</p>
-
-      <p
-        className={`mt-0.5 text-2xl font-extrabold leading-tight ${
-          danger
-            ? "text-red-600"
-            : warning
-              ? "text-[#FF6B0A]"
-              : "text-[#1F1712]"
-        }`}
-      >
-        {value}
-      </p>
+        </div>
+      )}
     </div>
   );
 }
 
+// Product Card
 function ProductCard({
   product,
-  formatPeso,
   onEdit,
   onDelete,
 }: {
   product: Product;
-  formatPeso: (value: number) => string;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -922,85 +437,76 @@ function ProductCard({
   const isOutOfStock = product.stock_quantity === 0;
 
   return (
-    <article className="overflow-hidden rounded-[20px] border border-[#E6D2BD] bg-[#FFF8F1] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-all">
       {/* Image */}
-      <div className="flex aspect-[4/3] items-center justify-center overflow-hidden bg-[#FFFDF9]">
+      <div className="h-44 bg-gray-50 flex items-center justify-center overflow-hidden">
         {product.image_url ? (
           <img
             src={product.image_url}
             alt={product.name}
-            className="h-full w-full object-cover"
-            loading="lazy"
+            className="w-full h-full object-cover"
           />
         ) : (
-          <Package size={42} className="text-[#FF6B0A]/25" />
+          <Package size={48} className="text-gray-200" />
         )}
       </div>
 
       {/* Info */}
-      <div className="p-3.5">
-        <div className="mb-2 flex items-start justify-between gap-2">
-          <h3 className="min-w-0 flex-1 break-words text-sm font-extrabold leading-snug text-[#1F1712]">
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <p className="font-semibold text-[#0F172A] text-sm leading-tight">
             {product.name}
-          </h3>
-
-          <span className="shrink-0 rounded-full bg-[#FFF0DE] px-2 py-0.5 text-[11px] font-extrabold text-[#FF6B0A]">
+          </p>
+          <span className="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full shrink-0 font-medium">
             {product.category}
           </span>
         </div>
-
-        <p className="mb-2 text-xl font-extrabold leading-tight text-[#FF6B0A]">
-          {formatPeso(product.price)}
+        <p className="text-lg font-bold text-blue-600 mb-3">
+          ₱{product.price.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
         </p>
 
         {/* Stock Badge */}
         <div
-          className={`mb-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-extrabold ${
+          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mb-4 ${
             isOutOfStock
-              ? "bg-red-50 text-red-600"
+              ? "bg-red-100 text-red-600"
               : isLowStock
-                ? "bg-[#FFF0DE] text-[#D35400]"
-                : "bg-green-50 text-green-700"
+                ? "bg-amber-100 text-amber-600"
+                : "bg-green-100 text-green-600"
           }`}
         >
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${
+          <div
+            className={`w-1.5 h-1.5 rounded-full ${
               isOutOfStock
                 ? "bg-red-500"
                 : isLowStock
-                  ? "bg-[#FF6B0A]"
-                  : "bg-green-600"
+                  ? "bg-amber-500"
+                  : "bg-green-500"
             }`}
           />
-
           {isOutOfStock
-            ? "Out"
+            ? "Out of Stock"
             : isLowStock
-              ? `Low (${product.stock_quantity})`
+              ? `Low Stock (${product.stock_quantity})`
               : `${product.stock_quantity} in stock`}
         </div>
 
         {/* Actions */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="flex gap-2">
           <button
-            type="button"
             onClick={onEdit}
-            className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-[#E6D2BD] bg-[#FFFDF9] px-2 py-2 text-sm font-extrabold text-[#6F625A] transition hover:border-[#FF6B0A] hover:text-[#FF6B0A] focus:outline-none focus:ring-4 focus:ring-[#FF6B0A]/20"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 border-2 border-gray-200 rounded-xl text-sm font-medium text-[#64748B] hover:border-blue-500 hover:text-blue-500 transition-all"
           >
-            <Pencil size={15} />
-            Edit
+            <Pencil size={14} /> Edit
           </button>
-
           <button
-            type="button"
             onClick={onDelete}
-            className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-red-100 bg-red-50 px-2 py-2 text-sm font-extrabold text-red-600 transition hover:border-red-300 hover:bg-red-100 focus:outline-none focus:ring-4 focus:ring-red-500/15"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 border-2 border-gray-200 rounded-xl text-sm font-medium text-[#64748B] hover:border-red-500 hover:text-red-500 transition-all"
           >
-            <Trash2 size={15} />
-            Delete
+            <Trash2 size={14} /> Delete
           </button>
         </div>
       </div>
-    </article>
+    </div>
   );
 }
