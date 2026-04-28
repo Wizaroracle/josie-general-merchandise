@@ -66,7 +66,7 @@ export default function POS() {
             ? {
                 ...c,
                 quantity: c.quantity + 1,
-                subtotal: (c.quantity + 1) * c.product.price,
+                subtotal: (c.quantity + 1) * c.unitPrice,
               }
             : c,
         ),
@@ -77,11 +77,23 @@ export default function POS() {
         {
           product,
           quantity: 1,
+          unitPrice: product.price, // ← default to product price
           subtotal: product.price,
         },
       ]);
     }
     toast.success(`${product.name} added`, { duration: 1000 });
+  };
+
+  const updatePrice = (productId: string, newPrice: number) => {
+    if (isNaN(newPrice) || newPrice < 0) return;
+    setCart((prev) =>
+      prev.map((c) =>
+        c.product.id === productId
+          ? { ...c, unitPrice: newPrice, subtotal: newPrice * c.quantity }
+          : c,
+      ),
+    );
   };
 
   const updateQty = (productId: string, delta: number) => {
@@ -96,11 +108,7 @@ export default function POS() {
               toast.error(`Only ${c.product.stock_quantity} in stock`);
               return c;
             }
-            return {
-              ...c,
-              quantity: newQty,
-              subtotal: newQty * c.product.price,
-            };
+            return { ...c, quantity: newQty, subtotal: newQty * c.unitPrice };
           })
           .filter(Boolean) as CartItem[],
     );
@@ -145,10 +153,9 @@ export default function POS() {
         sale_id: sale.id,
         product_id: c.product.id,
         quantity: c.quantity,
-        unit_price: c.product.price,
+        unit_price: c.unitPrice, // ← use actual price not product.price
         subtotal: c.subtotal,
       }));
-
       const { error: itemsError } = await supabase
         .from("sale_items")
         .insert(saleItems);
@@ -347,9 +354,29 @@ export default function POS() {
                     <p className="text-sm font-semibold text-[#0F172A] truncate">
                       {item.product.name}
                     </p>
-                    <p className="text-xs text-[#64748B]">
-                      ₱{item.product.price.toLocaleString()}
-                    </p>
+
+                    {/* Editable Price */}
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <span className="text-xs text-[#64748B]">₱</span>
+                      <input
+                        type="number"
+                        value={item.unitPrice}
+                        onChange={(e) =>
+                          updatePrice(
+                            item.product.id,
+                            parseFloat(e.target.value) || 0,
+                          )
+                        }
+                        className="w-20 text-xs font-semibold text-blue-600 bg-transparent border-b border-dashed border-blue-300 focus:outline-none focus:border-blue-500"
+                        min="0"
+                        step="0.01"
+                      />
+                      {item.unitPrice !== item.product.price && (
+                        <span className="text-[10px] text-amber-500 font-medium">
+                          (orig: ₱{item.product.price.toLocaleString()})
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Qty Controls */}

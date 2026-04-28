@@ -16,7 +16,7 @@ export interface Product {
   cost_price: number;
   stock_quantity: number;
   image_url: string | null;
-  is_deleted: boolean; 
+  is_deleted: boolean;
   created_at: string;
 }
 export interface Sale {
@@ -42,5 +42,6 @@ export interface SaleItem {
 export interface CartItem {
   product: Product;
   quantity: number;
+  unitPrice: number;
   subtotal: number;
 }
