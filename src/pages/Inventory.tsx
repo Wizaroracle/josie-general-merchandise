@@ -25,6 +25,13 @@ export default function Inventory() {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCameraModal, setShowCameraModal] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [facingMode, setFacingMode] = useState<"environment" | "user">(
+    "environment",
+  );
 
   // Form state
   const [form, setForm] = useState({
@@ -78,6 +85,85 @@ export default function Inventory() {
     setImageFile(null);
     setImagePreview(null);
     setShowModal(true);
+  };
+
+  const capturePhoto = () => {
+    if (!videoRef.current || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d")?.drawImage(video, 0, 0);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        const file = new File([blob], `photo-${Date.now()}.jpg`, {
+          type: "image/jpeg",
+        });
+        setImageFile(file);
+        setImagePreview(URL.createObjectURL(blob));
+        closeCamera();
+      },
+      "image/jpeg",
+      0.9,
+    );
+  };
+
+  const closeCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setShowCameraModal(false);
+    setFacingMode("environment");
+  };
+
+  const openCamera = async (facing: "environment" | "user" = "environment") => {
+    try {
+      // Stop existing stream first
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+
+      // Try exact first, fallback to ideal
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { exact: facing } },
+        });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: facing },
+        });
+      }
+
+      streamRef.current = stream;
+      setFacingMode(facing);
+
+      if (!showCameraModal) setShowCameraModal(true);
+
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().catch(() => {});
+        }
+      }, 150);
+    } catch (err) {
+      toast.error("Camera not available. Please use Upload Photo instead.");
+    }
+  };
+
+  const switchCamera = () => {
+    const newFacing = facingMode === "environment" ? "user" : "environment";
+    openCamera(newFacing);
   };
 
   const openEdit = (product: Product) => {
@@ -274,7 +360,12 @@ export default function Inventory() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <Package size={40} className="text-gray-300" />
+                    <div className="flex flex-col items-center gap-2">
+                      <Package size={32} className="text-gray-300" />
+                      <span className="text-xs text-gray-400">
+                        Tap to add photo
+                      </span>
+                    </div>
                   )}
                 </div>
                 <div className="flex gap-2">
@@ -285,7 +376,8 @@ export default function Inventory() {
                     <Package size={16} /> Upload Photo
                   </button>
                   <button
-                    onClick={() => cameraInputRef.current?.click()}
+                    type="button"
+                    onClick={() => openCamera("environment")}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 rounded-xl text-sm font-medium text-blue-600 transition-colors"
                   >
                     <Camera size={16} /> Take Photo
@@ -307,6 +399,57 @@ export default function Inventory() {
                   onChange={handleImageSelect}
                 />
               </div>
+
+              {/* Camera Modal */}
+              {showCameraModal && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60]">
+                  <div className="bg-white rounded-3xl overflow-hidden w-full max-w-lg mx-4">
+                    <div className="flex items-center justify-between p-4 border-b border-gray-100">
+                      <h3 className="font-bold text-[#0F172A]">Take Photo</h3>
+                      <button
+                        type="button"
+                        onClick={closeCamera}
+                        className="p-2 hover:bg-gray-100 rounded-xl"
+                      >
+                        <X size={20} />
+                      </button>
+                    </div>
+                    <div className="relative bg-black">
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        className="w-full max-h-80 object-cover"
+                      />
+                      <canvas ref={canvasRef} className="hidden" />
+                    </div>
+                    <div className="p-4 flex gap-3">
+                      <button
+                        type="button"
+                        onClick={closeCamera}
+                        className="py-3 px-4 border-2 border-gray-200 rounded-xl font-medium text-[#64748B]"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={switchCamera}
+                        className="py-3 px-4 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium text-[#64748B] flex items-center gap-2"
+                      >
+                        🔄 Switch
+                      </button>
+                      <button
+                        type="button"
+                        onClick={capturePhoto}
+                        className="flex-1 flex items-center justify-center gap-2 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl"
+                      >
+                        <Camera size={18} /> Capture
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Product Name */}
               <div>
